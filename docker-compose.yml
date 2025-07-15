@@ -1,0 +1,60 @@
+services:
+  traefik:
+    image: traefik:v3.0
+    container_name: ${COMPOSE_PROJECT_NAME:-texlyre}-traefik
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-local}
+      - ACME_EMAIL=${ACME_EMAIL}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik:/etc/traefik:ro
+      - traefik-certs:/certs
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-texlyre}-dashboard.rule=Host(`${TRAEFIK_HOST:-traefik.localhost}`)"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-texlyre}-dashboard.service=api@internal"
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-texlyre}-portainer
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-texlyre}-portainer.rule=Host(`${PORTAINER_HOST:-portainer.localhost}`)"
+      - "traefik.http.services.${COMPOSE_PROJECT_NAME:-texlyre}-portainer.loadbalancer.server.port=9000"
+
+  texlyre-frontend:
+    image: nginx:alpine
+    container_name: ${COMPOSE_PROJECT_NAME:-texlyre}-frontend
+    restart: unless-stopped
+    volumes:
+      - ./frontend/texlyre/dist:/usr/share/nginx/html:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-texlyre}-frontend.rule=Host(`${FRONTEND_HOST:-texlyre.localhost}`)"
+      - "traefik.http.services.${COMPOSE_PROJECT_NAME:-texlyre}-frontend.loadbalancer.server.port=80"
+
+networks:
+  traefik:
+    name: ${COMPOSE_PROJECT_NAME:-texlyre}-traefik
+    driver: bridge
+
+volumes:
+  traefik-certs:
+    name: ${COMPOSE_PROJECT_NAME:-texlyre}-certs
+  portainer_data:
+    name: ${COMPOSE_PROJECT_NAME:-texlyre}-portainer-data

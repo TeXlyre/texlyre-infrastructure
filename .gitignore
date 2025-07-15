@@ -1,0 +1,11 @@
+.env
+.env.local
+.env.production
+config/env/
+generated/
+frontend/texlyre/node_modules/
+frontend/texlyre/dist/
+services/*/node_modules/
+services/*/.env
+*.log
+__pycache__/

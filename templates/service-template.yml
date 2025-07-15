@@ -1,0 +1,19 @@
+services:
+  {{SERVICE_NAME}}:
+    build:
+      context: ./services/{{SERVICE_NAME}}
+    container_name: infra-{{SERVICE_NAME}}
+    restart: unless-stopped
+    env_file:
+      - ./config/env/{{ENV_FILE}}
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.infra-{{SERVICE_NAME}}.rule=Host(`{{SUBDOMAIN}}.{{BASE_DOMAIN}}`)"
+      - "traefik.http.services.infra-{{SERVICE_NAME}}.loadbalancer.server.port={{PORT}}"{{SSL_LABELS}}
+
+networks:
+  traefik:
+    name: {{COMPOSE_PROJECT_NAME}}-traefik
+    external: true
