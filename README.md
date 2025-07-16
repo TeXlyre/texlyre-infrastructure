@@ -8,7 +8,8 @@ To build and deploy containers:
 ```bash
 # You should create a new .env.local if you want your own settings and edit them there ONLY
 cp envfile.local .env
-git submodule update --init --recursive
+git submodule deinit --all -f
+git submodule update --init --recursive --remote
 # To update submodules to lastest version
 # git submodule update --remote --merge
 docker compose up -d --build

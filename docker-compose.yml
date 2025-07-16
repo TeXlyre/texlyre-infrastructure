@@ -138,7 +138,6 @@ services:
       - PORT=9000
       - API_ORIGINS=*
       - PEERJS_CORS=*
-      - SKIP_TESTS=${SKIP_TESTS}
       - HOST_DOMAIN=${BASE_DOMAIN}
       - PEERJS_PORT=9000
       - PEERJS_PATH=/myapp
