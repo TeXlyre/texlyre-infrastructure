@@ -1,6 +1,5 @@
 COMPOSE_PROJECT_NAME=texlyre
 ENVIRONMENT=production
-SKIP_TESTS=false
 BASE_DOMAIN=yourdomain.com
 TRAEFIK_HOST=traefik.yourdomain.com
 PORTAINER_HOST=portainer.yourdomain.com

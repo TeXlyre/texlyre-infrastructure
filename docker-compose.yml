@@ -111,7 +111,7 @@ services:
       - NODE_ENV=production
       - PORT=8080
       - REDIS_PORT=${REDIS_PORT}
-      - PEERJS_SERVERS=https://peerjs.${BASE_DOMAIN}:8443/myapp/
+      - PEERJS_SERVERS=http://peerjs.${BASE_DOMAIN}:8082/myapp/
       - HOST_DOMAIN=${BASE_DOMAIN}
       - API_ORIGINS=${BASE_DOMAIN}
     networks:
@@ -129,12 +129,16 @@ services:
   peerjs-server:
     build:
       context: ./services/peerjs-server
+      args:
+        SKIP_TESTS: "true"
     container_name: ${COMPOSE_PROJECT_NAME}-peerjs
     restart: unless-stopped
     environment:
       - NODE_ENV=production
       - PORT=9000
-      - API_ORIGINS=${BASE_DOMAIN}
+      - API_ORIGINS=*
+      - PEERJS_CORS=*
+      - SKIP_TESTS=${SKIP_TESTS}
       - HOST_DOMAIN=${BASE_DOMAIN}
       - PEERJS_PORT=9000
       - PEERJS_PATH=/myapp

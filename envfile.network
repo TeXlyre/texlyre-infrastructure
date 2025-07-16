@@ -1,6 +1,5 @@
 COMPOSE_PROJECT_NAME=texlyre
 ENVIRONMENT=local
-SKIP_TESTS=true
 BASE_DOMAIN=localhost
 TRAEFIK_HOST=traefik.localhost
 PORTAINER_HOST=portainer.localhost
