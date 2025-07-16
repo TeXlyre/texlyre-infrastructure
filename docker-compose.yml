@@ -17,6 +17,11 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_HOST}`)"
       - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.entrypoints=web"
+      - "traefik.http.routers.dashboard-secure.rule=Host(`${TRAEFIK_HOST}`)"
+      - "traefik.http.routers.dashboard-secure.service=api@internal"
+      - "traefik.http.routers.dashboard-secure.entrypoints=websecure"
+      - "traefik.http.routers.dashboard-secure.tls=true"
 
   portainer:
     image: portainer/portainer-ce:latest
@@ -30,7 +35,12 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.portainer.rule=Host(`${PORTAINER_HOST}`)"
+      - "traefik.http.routers.portainer.entrypoints=web"
       - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+      - "traefik.http.routers.portainer-secure.rule=Host(`${PORTAINER_HOST}`)"
+      - "traefik.http.routers.portainer-secure.entrypoints=websecure"
+      - "traefik.http.routers.portainer-secure.tls=true"
+      - "traefik.http.routers.portainer-secure.service=portainer"
 
   texlyre-frontend:
     build:
@@ -45,6 +55,10 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`${FRONTEND_HOST}`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.routers.frontend-secure.rule=Host(`${FRONTEND_HOST}`)"
+      - "traefik.http.routers.frontend-secure.entrypoints=websecure"
+      - "traefik.http.routers.frontend-secure.tls=true"
 
   texlive-ondemand-server:
     build:
@@ -59,7 +73,12 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.texlive.rule=Host(`texlive.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.texlive.entrypoints=web"
       - "traefik.http.services.texlive.loadbalancer.server.port=8080"
+      - "traefik.http.routers.texlive-secure.rule=Host(`texlive.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.texlive-secure.entrypoints=websecure"
+      - "traefik.http.routers.texlive-secure.tls=true"
+      - "traefik.http.routers.texlive-secure.service=texlive"
 
   y-webrtc-server:
     build:
@@ -74,7 +93,12 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.ywebrtc.rule=Host(`ywebrtc.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.ywebrtc.entrypoints=web"
       - "traefik.http.services.ywebrtc.loadbalancer.server.port=1234"
+      - "traefik.http.routers.ywebrtc-secure.rule=Host(`ywebrtc.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.ywebrtc-secure.entrypoints=websecure"
+      - "traefik.http.routers.ywebrtc-secure.tls=true"
+      - "traefik.http.routers.ywebrtc-secure.service=ywebrtc"
 
   filepizza-server:
     build:
@@ -89,7 +113,12 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.filepizza.rule=Host(`filepizza.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.filepizza.entrypoints=web"
       - "traefik.http.services.filepizza.loadbalancer.server.port=8080"
+      - "traefik.http.routers.filepizza-secure.rule=Host(`filepizza.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.filepizza-secure.entrypoints=websecure"
+      - "traefik.http.routers.filepizza-secure.tls=true"
+      - "traefik.http.routers.filepizza-secure.service=filepizza"
 
   peerjs-server:
     build:
@@ -104,7 +133,12 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.peerjs.rule=Host(`peerjs.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.peerjs.entrypoints=web"
       - "traefik.http.services.peerjs.loadbalancer.server.port=9000"
+      - "traefik.http.routers.peerjs-secure.rule=Host(`peerjs.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.peerjs-secure.entrypoints=websecure"
+      - "traefik.http.routers.peerjs-secure.tls=true"
+      - "traefik.http.routers.peerjs-secure.service=peerjs"
 
   redis:
     image: redis:alpine

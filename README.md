@@ -24,8 +24,15 @@ docker compose down
 * Portainer: http://portainer.localhost:8082
 * TeXlyre Frontend: http://texlyre.localhost:8082/texlyre/
 
-## Portainer localhost
+## Portainer localhost (HTTP)
 * FilePizza: http://filepizza.localhost:8082 (new container: infra-filepizza-server)
 * Y-WebRTC: http://ywebrtc.localhost:8082 (new container: infra-y-webrtc-server)
 * PeerJS: http://peerjs.localhost:8082 (new container: infra-peerjs-server)
 * TeXlive: http://texlive.localhost:8082 (new container: infra-texlive-ondemand-server)
+
+## Portainer localhost (TLS)
+* FilePizza: https://filepizza.localhost:8443 (new container: infra-filepizza-server)
+* Y-WebRTC: https://ywebrtc.localhost:8443 (new container: infra-y-webrtc-server)
+* PeerJS: https://peerjs.localhost:8443 (new container: infra-peerjs-server)
+* TeXlive: https://texlive.localhost:8443 (new container: infra-texlive-ondemand-server)
+
