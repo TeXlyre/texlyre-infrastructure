@@ -1,9 +1,8 @@
-COMPOSE_PROJECT_NAME=texlyre-local
+COMPOSE_PROJECT_NAME=texlyre
 ENVIRONMENT=local
 BASE_DOMAIN=localhost
 TRAEFIK_HOST=traefik.localhost
 PORTAINER_HOST=portainer.localhost
 FRONTEND_HOST=texlyre.localhost
-ACME_EMAIL=admin@localhost
 HTTP_PORT=8082
 HTTPS_PORT=8443

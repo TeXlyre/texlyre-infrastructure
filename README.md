@@ -3,11 +3,19 @@ An omni-repo for deploying all TeXlyre servers
 
 # Scripts
 
+To build and deploy containers:
+
 ```bash
 # You should create a new .env.local if you want your own settings and edit them there ONLY
-cp envfile .env.local
-./quick-start.sh
-./auto-deploy-stacks.sh
+cp envfile .env
+git submodule update --init --recursive
+docker compose up -d --build
+```
+
+To stop containers:
+
+```bash
+docker compose down
 ```
 
 # Links
@@ -16,14 +24,8 @@ cp envfile .env.local
 * Portainer: http://portainer.localhost:8082
 * TeXlyre Frontend: http://texlyre.localhost:8082/texlyre/
 
-## Current localhost (no portainer)
-* FilePizza: http://localhost:8080 (container: filepizza-server-filepizza-1)
-* Y-WebRTC: http://localhost:4444 (container: y-webrtc-y-webrtc-signaling-1)
-* PeerJS: http://localhost:9000 (container: peerjs-server-peerjs-1)
-* APT/SwiftLaTeX: http://localhost:5004 (container: apt)
-
-## Portainer localhost (not working yet - possibly clashing with running servers)
-* FilePizza: http://files.localhost:8082 (new container: infra-filepizza-server)
-* Y-WebRTC: http://sync.localhost:8082 (new container: infra-y-webrtc-server)
-* PeerJS: http://peer.localhost:8082 (new container: infra-peerjs-server)
-* TeXlive: http://compile.localhost:8082 (new container: infra-texlive-ondemand-server)
+## Portainer localhost
+* FilePizza: http://filepizza.localhost:8082 (new container: infra-filepizza-server)
+* Y-WebRTC: http://ywebrtc.localhost:8082 (new container: infra-y-webrtc-server)
+* PeerJS: http://peerjs.localhost:8082 (new container: infra-peerjs-server)
+* TeXlive: http://texlive.localhost:8082 (new container: infra-texlive-ondemand-server)
