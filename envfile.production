@@ -1,0 +1,12 @@
+COMPOSE_PROJECT_NAME=texlyre
+ENVIRONMENT=production
+SKIP_TESTS=false
+BASE_DOMAIN=yourdomain.com
+TRAEFIK_HOST=traefik.yourdomain.com
+PORTAINER_HOST=portainer.yourdomain.com
+FRONTEND_HOST=texlyre.yourdomain.com
+REDIS_PORT=6379
+PRODUCTION_DOMAIN=yourdomain.com
+
+HTTP_PORT=80
+HTTPS_PORT=443

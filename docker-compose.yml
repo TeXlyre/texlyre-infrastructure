@@ -4,9 +4,9 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME}-traefik
     restart: unless-stopped
     ports:
-      - "${HTTP_PORT:-80}:80"
-      - "${HTTPS_PORT:-443}:443"
-      - "8080:8080"
+      - "${BIND_IP:-127.0.0.1}:${HTTP_PORT:-80}:80"
+      - "${BIND_IP:-127.0.0.1}:${HTTPS_PORT:-443}:443"
+      - "127.0.0.1:8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik:/etc/traefik:ro
@@ -15,10 +15,10 @@ services:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_HOST}`)"
+      - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_HOST}`) || Host(`traefik.${PRODUCTION_DOMAIN:-yourdomain.com}`) || PathPrefix(`/traefik`)"
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.entrypoints=web"
-      - "traefik.http.routers.dashboard-secure.rule=Host(`${TRAEFIK_HOST}`)"
+      - "traefik.http.routers.dashboard-secure.rule=Host(`${TRAEFIK_HOST}`) || Host(`traefik.${PRODUCTION_DOMAIN:-yourdomain.com}`) || PathPrefix(`/traefik`)"
       - "traefik.http.routers.dashboard-secure.service=api@internal"
       - "traefik.http.routers.dashboard-secure.entrypoints=websecure"
       - "traefik.http.routers.dashboard-secure.tls=true"
@@ -34,10 +34,10 @@ services:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.portainer.rule=Host(`${PORTAINER_HOST}`)"
+      - "traefik.http.routers.portainer.rule=Host(`${PORTAINER_HOST}`) || Host(`portainer.${PRODUCTION_DOMAIN:-yourdomain.com}`) || PathPrefix(`/portainer`)"
       - "traefik.http.routers.portainer.entrypoints=web"
       - "traefik.http.services.portainer.loadbalancer.server.port=9000"
-      - "traefik.http.routers.portainer-secure.rule=Host(`${PORTAINER_HOST}`)"
+      - "traefik.http.routers.portainer-secure.rule=Host(`${PORTAINER_HOST}`) || Host(`portainer.${PRODUCTION_DOMAIN:-yourdomain.com}`) || PathPrefix(`/portainer`)"
       - "traefik.http.routers.portainer-secure.entrypoints=websecure"
       - "traefik.http.routers.portainer-secure.tls=true"
       - "traefik.http.routers.portainer-secure.service=portainer"
@@ -54,9 +54,9 @@ services:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`${FRONTEND_HOST}`)"
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/texlyre`)"
       - "traefik.http.routers.frontend.entrypoints=web"
-      - "traefik.http.routers.frontend-secure.rule=Host(`${FRONTEND_HOST}`)"
+      - "traefik.http.routers.frontend-secure.rule=PathPrefix(`/texlyre`)"
       - "traefik.http.routers.frontend-secure.entrypoints=websecure"
       - "traefik.http.routers.frontend-secure.tls=true"
 
@@ -67,15 +67,16 @@ services:
     restart: unless-stopped
     environment:
       - PORT=8080
-      - REDIS_PORT=6379
+      - REDIS_PORT=6${REDIS_PORT}
+      - API_ORIGINS=${BASE_DOMAIN}
     networks:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.texlive.rule=Host(`texlive.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.texlive.rule=Host(`texlive.${BASE_DOMAIN}`) || Host(`texlive.${PRODUCTION_DOMAIN:-yourdomain.com}`) || PathPrefix(`/texlive`)"
       - "traefik.http.routers.texlive.entrypoints=web"
       - "traefik.http.services.texlive.loadbalancer.server.port=8080"
-      - "traefik.http.routers.texlive-secure.rule=Host(`texlive.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.texlive-secure.rule=Host(`texlive.${BASE_DOMAIN}`) || Host(`texlive.${PRODUCTION_DOMAIN:-yourdomain.com}`) || PathPrefix(`/texlive`)"
       - "traefik.http.routers.texlive-secure.entrypoints=websecure"
       - "traefik.http.routers.texlive-secure.tls=true"
       - "traefik.http.routers.texlive-secure.service=texlive"
@@ -88,14 +89,15 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=1234
+      - API_ORIGINS=${BASE_DOMAIN}
     networks:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ywebrtc.rule=Host(`ywebrtc.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.ywebrtc.rule=Host(`ywebrtc.${BASE_DOMAIN}`) || Host(`ywebrtc.${PRODUCTION_DOMAIN:-yourdomain.com}`) || PathPrefix(`/ywebrtc`)"
       - "traefik.http.routers.ywebrtc.entrypoints=web"
       - "traefik.http.services.ywebrtc.loadbalancer.server.port=1234"
-      - "traefik.http.routers.ywebrtc-secure.rule=Host(`ywebrtc.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.ywebrtc-secure.rule=Host(`ywebrtc.${BASE_DOMAIN}`) || Host(`ywebrtc.${PRODUCTION_DOMAIN:-yourdomain.com}`) || PathPrefix(`/ywebrtc`)"
       - "traefik.http.routers.ywebrtc-secure.entrypoints=websecure"
       - "traefik.http.routers.ywebrtc-secure.tls=true"
       - "traefik.http.routers.ywebrtc-secure.service=ywebrtc"
@@ -108,14 +110,18 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=8080
+      - REDIS_PORT=${REDIS_PORT}
+      - PEERJS_SERVERS=https://peerjs.${BASE_DOMAIN}:8443/myapp/
+      - HOST_DOMAIN=${BASE_DOMAIN}
+      - API_ORIGINS=${BASE_DOMAIN}
     networks:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.filepizza.rule=Host(`filepizza.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.filepizza.rule=Host(`filepizza.${BASE_DOMAIN}`) || Host(`filepizza.${PRODUCTION_DOMAIN:-yourdomain.com}`) || PathPrefix(`/filepizza`)"
       - "traefik.http.routers.filepizza.entrypoints=web"
       - "traefik.http.services.filepizza.loadbalancer.server.port=8080"
-      - "traefik.http.routers.filepizza-secure.rule=Host(`filepizza.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.filepizza-secure.rule=Host(`filepizza.${BASE_DOMAIN}`) || Host(`filepizza.${PRODUCTION_DOMAIN:-yourdomain.com}`) || PathPrefix(`/filepizza`)"
       - "traefik.http.routers.filepizza-secure.entrypoints=websecure"
       - "traefik.http.routers.filepizza-secure.tls=true"
       - "traefik.http.routers.filepizza-secure.service=filepizza"
@@ -128,14 +134,22 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=9000
+      - API_ORIGINS=${BASE_DOMAIN}
+      - HOST_DOMAIN=${BASE_DOMAIN}
+      - PEERJS_PORT=9000
+      - PEERJS_PATH=/myapp
+      - PEERJS_KEY=peerjs
+      - PEERJS_PROXIED=true
+      - PEERJS_ALLOW_DISCOVERY=false
+      - PEERJS_CONCURRENT_LIMIT=5000
     networks:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.peerjs.rule=Host(`peerjs.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.peerjs.rule=Host(`peerjs.${BASE_DOMAIN}`) || Host(`peerjs.${PRODUCTION_DOMAIN:-yourdomain.com}`) || PathPrefix(`/peerjs`)"
       - "traefik.http.routers.peerjs.entrypoints=web"
       - "traefik.http.services.peerjs.loadbalancer.server.port=9000"
-      - "traefik.http.routers.peerjs-secure.rule=Host(`peerjs.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.peerjs-secure.rule=Host(`peerjs.${BASE_DOMAIN}`) || Host(`peerjs.${PRODUCTION_DOMAIN:-yourdomain.com}`) || PathPrefix(`/peerjs`)"
       - "traefik.http.routers.peerjs-secure.entrypoints=websecure"
       - "traefik.http.routers.peerjs-secure.tls=true"
       - "traefik.http.routers.peerjs-secure.service=peerjs"
