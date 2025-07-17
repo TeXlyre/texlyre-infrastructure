@@ -69,16 +69,16 @@ services:
     restart: unless-stopped
     environment:
       - PORT=8080
-      - REDIS_PORT=6${REDIS_PORT}
-      - API_ORIGINS=${BASE_DOMAIN}
+      - REDIS_PORT=${REDIS_PORT}
+      - API_ORIGINS=${API_ORIGINS}
     networks:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.texlive.rule=Host(`texlive.${BASE_DOMAIN}`) || Host(`texlive.${PRODUCTION_DOMAIN:-yourdomain.com}`) || PathPrefix(`/texlive`)"
+      - "traefik.http.routers.texlive.rule=Host(`texlive.${BASE_DOMAIN}`) || Host(`texlive.${PRODUCTION_DOMAIN:-yourdomain.com}`)"
       - "traefik.http.routers.texlive.entrypoints=web"
       - "traefik.http.services.texlive.loadbalancer.server.port=8080"
-      - "traefik.http.routers.texlive-secure.rule=Host(`texlive.${BASE_DOMAIN}`) || Host(`texlive.${PRODUCTION_DOMAIN:-yourdomain.com}`) || PathPrefix(`/texlive`)"
+      - "traefik.http.routers.texlive-secure.rule=Host(`texlive.${BASE_DOMAIN}`) || Host(`texlive.${PRODUCTION_DOMAIN:-yourdomain.com}`)"
       - "traefik.http.routers.texlive-secure.entrypoints=websecure"
       - "traefik.http.routers.texlive-secure.tls=true"
       - "traefik.http.routers.texlive-secure.service=texlive"
@@ -91,42 +91,18 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=1234
-      - API_ORIGINS=${BASE_DOMAIN}
+      - API_ORIGINS=${API_ORIGINS}
     networks:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ywebrtc.rule=Host(`ywebrtc.${BASE_DOMAIN}`) || Host(`ywebrtc.${PRODUCTION_DOMAIN:-yourdomain.com}`) || PathPrefix(`/ywebrtc`)"
+      - "traefik.http.routers.ywebrtc.rule=Host(`ywebrtc.${BASE_DOMAIN}`) || Host(`ywebrtc.${PRODUCTION_DOMAIN:-yourdomain.com}`)"
       - "traefik.http.routers.ywebrtc.entrypoints=web"
       - "traefik.http.services.ywebrtc.loadbalancer.server.port=1234"
-      - "traefik.http.routers.ywebrtc-secure.rule=Host(`ywebrtc.${BASE_DOMAIN}`) || Host(`ywebrtc.${PRODUCTION_DOMAIN:-yourdomain.com}`) || PathPrefix(`/ywebrtc`)"
+      - "traefik.http.routers.ywebrtc-secure.rule=Host(`ywebrtc.${BASE_DOMAIN}`) || Host(`ywebrtc.${PRODUCTION_DOMAIN:-yourdomain.com}`)"
       - "traefik.http.routers.ywebrtc-secure.entrypoints=websecure"
       - "traefik.http.routers.ywebrtc-secure.tls=true"
       - "traefik.http.routers.ywebrtc-secure.service=ywebrtc"
-
-  filepizza-server:
-    build:
-      context: ./services/filepizza-server
-    container_name: ${COMPOSE_PROJECT_NAME}-filepizza
-    restart: unless-stopped
-    environment:
-      - NODE_ENV=production
-      - PORT=8080
-      - REDIS_PORT=${REDIS_PORT}
-      - PEERJS_SERVERS=https://peerjs.${BASE_DOMAIN}:8443/myapp/
-      - HOST_DOMAIN=${BASE_DOMAIN}
-      - API_ORIGINS=${BASE_DOMAIN}
-    networks:
-      - traefik
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.filepizza.rule=Host(`filepizza.${BASE_DOMAIN}`) || Host(`filepizza.${PRODUCTION_DOMAIN:-yourdomain.com}`) || PathPrefix(`/filepizza`)"
-      - "traefik.http.routers.filepizza.entrypoints=web"
-      - "traefik.http.services.filepizza.loadbalancer.server.port=8080"
-      - "traefik.http.routers.filepizza-secure.rule=Host(`filepizza.${BASE_DOMAIN}`) || Host(`filepizza.${PRODUCTION_DOMAIN:-yourdomain.com}`) || PathPrefix(`/filepizza`)"
-      - "traefik.http.routers.filepizza-secure.entrypoints=websecure"
-      - "traefik.http.routers.filepizza-secure.tls=true"
-      - "traefik.http.routers.filepizza-secure.service=filepizza"
 
   peerjs-server:
     build:
@@ -138,11 +114,11 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=9000
-      - API_ORIGINS=*
-      - PEERJS_CORS=*
-      - HOST_DOMAIN=${BASE_DOMAIN}
+      - API_ORIGINS=${API_ORIGINS}
+      - PEERJS_CORS=${API_ORIGINS}
+      - HOST_DOMAIN=${PRODUCTION_DOMAIN}
       - PEERJS_PORT=9000
-      - PEERJS_PATH=/myapp
+      - PEERJS_PATH=/texlyre
       - PEERJS_KEY=peerjs
       - PEERJS_PROXIED=true
       - PEERJS_ALLOW_DISCOVERY=false
@@ -151,13 +127,37 @@ services:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.peerjs.rule=Host(`peerjs.${BASE_DOMAIN}`) || Host(`peerjs.${PRODUCTION_DOMAIN:-yourdomain.com}`) || PathPrefix(`/peerjs`)"
+      - "traefik.http.routers.peerjs.rule=Host(`peerjs.${BASE_DOMAIN}`) || Host(`peerjs.${PRODUCTION_DOMAIN:-yourdomain.com}`)"
       - "traefik.http.routers.peerjs.entrypoints=web"
       - "traefik.http.services.peerjs.loadbalancer.server.port=9000"
-      - "traefik.http.routers.peerjs-secure.rule=Host(`peerjs.${BASE_DOMAIN}`) || Host(`peerjs.${PRODUCTION_DOMAIN:-yourdomain.com}`) || PathPrefix(`/peerjs`)"
+      - "traefik.http.routers.peerjs-secure.rule=Host(`peerjs.${BASE_DOMAIN}`) || Host(`peerjs.${PRODUCTION_DOMAIN:-yourdomain.com}`)"
       - "traefik.http.routers.peerjs-secure.entrypoints=websecure"
       - "traefik.http.routers.peerjs-secure.tls=true"
       - "traefik.http.routers.peerjs-secure.service=peerjs"
+
+  filepizza-server:
+    build:
+      context: ./services/filepizza-server
+    container_name: ${COMPOSE_PROJECT_NAME}-filepizza
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - REDIS_PORT=${REDIS_PORT}
+      - PEERJS_SERVERS=${PEERJS_SERVERS}
+      - HOST_DOMAIN=${PRODUCTION_DOMAIN}
+      - API_ORIGINS=${API_ORIGINS}
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.filepizza.rule=Host(`filepizza.${BASE_DOMAIN}`) || Host(`filepizza.${PRODUCTION_DOMAIN:-yourdomain.com}`)"
+      - "traefik.http.routers.filepizza.entrypoints=web"
+      - "traefik.http.services.filepizza.loadbalancer.server.port=8080"
+      - "traefik.http.routers.filepizza-secure.rule=Host(`filepizza.${BASE_DOMAIN}`) || Host(`filepizza.${PRODUCTION_DOMAIN:-yourdomain.com}`)"
+      - "traefik.http.routers.filepizza-secure.entrypoints=websecure"
+      - "traefik.http.routers.filepizza-secure.tls=true"
+      - "traefik.http.routers.filepizza-secure.service=filepizza"
 
   redis:
     image: redis:alpine

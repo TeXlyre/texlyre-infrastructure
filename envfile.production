@@ -4,8 +4,13 @@ BASE_DOMAIN=yourdomain.com
 TRAEFIK_HOST=traefik.yourdomain.com
 PORTAINER_HOST=portainer.yourdomain.com
 FRONTEND_HOST=texlyre.yourdomain.com
-REDIS_PORT=6379
-PRODUCTION_DOMAIN=yourdomain.com
+PRODUCTION_DOMAIN=yourdomain.com   # Need to set the A Records manually
 
 HTTP_PORT=80
 HTTPS_PORT=443
+
+# Custom properties generalized for multiple services
+REDIS_PORT=6379  # Redis instance will be created by FilePizza and reused by Texlive
+API_ORIGINS=*  # Too relaxed, so you need to set it depending on how you limit CORS
+## Remove PEERJS_SERVERS to revert to using public signaling server (provided by peerjs) or set the link to wherever yourdomain.com points
+PEERJS_SERVERS=wss://peerjs.${PRODUCTION_DOMAIN}/texlyre/  # This is required by FilePizza

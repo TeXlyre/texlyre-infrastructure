@@ -1,0 +1,16 @@
+services:
+  texlive-ondemand-server:
+    ports:
+      - "${BIND_IP:-127.0.0.1}:${HTTP_PORT_TEXLIVE}:8080"
+
+  y-webrtc-server:
+    ports:
+      - "${BIND_IP:-127.0.0.1}:${HTTP_PORT_YWEBRTC}:1234"
+
+  filepizza-server:
+    ports:
+      - "${BIND_IP:-127.0.0.1}:${HTTP_PORT_FILEPIZZA}:8080"
+
+  peerjs-server:
+    ports:
+      - "${BIND_IP:-127.0.0.1}:${HTTP_PORT_PEERJS}:9000"
