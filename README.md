@@ -6,10 +6,17 @@ An omni-repo for deploying all TeXlyre servers locally
 
 ## Quick Start
 
-Create your local environment file and deploy:
+Before you deploy, you need to copy the `enfile.local` to `.env` and `frontend/userdata.local.json` to `frontend/userdata.json`. 
+You can modify those two newly created configs, which will not be included in the repo (gitignored):
 
 ```bash
 cp envfile.local .env
+cp frontend/userdata.local.json frontend/userdata.json
+```
+
+Create your local environment file and deploy:
+
+```bash
 git submodule deinit --all -f
 git submodule update --init --recursive --remote
 docker compose up -d --build

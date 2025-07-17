@@ -4,6 +4,7 @@ WORKDIR /app
 COPY /frontend/texlyre/package*.json ./
 RUN npm install
 COPY /frontend/texlyre/ ./
+COPY /frontend/userdata.json ./userdata.json
 RUN npm run build
 
 FROM nginx:alpine

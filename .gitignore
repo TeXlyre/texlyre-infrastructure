@@ -1,6 +1,7 @@
 .env*
 frontend/texlyre/node_modules/
 frontend/texlyre/dist/
+frontend/userdata.json
 services/*/node_modules/
 services/*/dist/
 services/*/.env
