@@ -2,6 +2,8 @@
 
 An omni-repo for deploying all TeXlyre servers locally
 
+![TeXlyre Infrastructure Diagram](./assets/infrastructure.png)
+
 ## Quick Start
 
 Create your local environment file and deploy:
