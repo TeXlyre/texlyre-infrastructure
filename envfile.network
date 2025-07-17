@@ -4,7 +4,7 @@ BASE_DOMAIN=localhost
 TRAEFIK_HOST=traefik.localhost
 PORTAINER_HOST=portainer.localhost
 FRONTEND_HOST=texlyre.localhost
-PRODUCTION_DOMAIN=yourdomain.com  # Need to set the A Records manually
+PRODUCTION_DOMAIN=[YOUR_IP]  # get your private address and type it in place of [PRIVATE_IP] e.g., windows -> `ipconfig`; linux & mac -> `ifconfig`
 
 BIND_IP=0.0.0.0  # Network accessible
 HTTP_PORT=8082
@@ -23,4 +23,4 @@ REDIS_PORT=6379  # Redis instance will be created by FilePizza and reused by Tex
 API_ORIGINS=*  # Too relaxed, so you need to set it depending on how you limit CORS
 ## For local network hosting, you cannot remove PEERJS_SERVERS. However, if you plan on using localhost (without HTTPS),
 ##  you can still remove the env var and it will default to public (public requires internet connection)
-PEERJS_SERVERS=http://192.168.0.63:${HTTP_PORT_PEERJS}/texlyre/  # This is required by FilePizza
+PEERJS_SERVERS=http://{PRODUCTION_DOMAIN}:${HTTP_PORT_PEERJS}/texlyre/  # This is required by FilePizza
