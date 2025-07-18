@@ -1,5 +1,5 @@
 .env*
-.idea
+.idea/
 frontend/texlyre/node_modules/
 frontend/texlyre/dist/
 frontend/userdata.json
