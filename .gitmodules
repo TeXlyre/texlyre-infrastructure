@@ -3,13 +3,13 @@
 	url = https://github.com/TeXlyre/texlyre.git
 [submodule "services/y-webrtc-server"]
 	path = services/y-webrtc-server
-	url = git@github.com:TeXlyre/y-webrtc-server.git
+	url = https://github.com/TeXlyre/y-webrtc-server.git
 [submodule "services/peerjs-server"]
 	path = services/peerjs-server
-	url = git@github.com:TeXlyre/peerjs-server.git
+	url = https://github.com/TeXlyre/peerjs-server.git
 [submodule "services/texlive-ondemand-server"]
 	path = services/texlive-ondemand-server
-	url = git@github.com:TeXlyre/texlive-ondemand-server.git
+	url = https://github.com/TeXlyre/texlive-ondemand-server.git
 [submodule "services/filepizza-server"]
 	path = services/filepizza-server
-	url = git@github.com:TeXlyre/filepizza-server.git
+	url = https://github.com/TeXlyre/filepizza-server.git

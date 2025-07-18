@@ -9,4 +9,8 @@ RUN npm run build
 
 FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Fix MIME types properly
+RUN sed -i '/application\/javascript/a\    application/javascript                   mjs;' /etc/nginx/mime.types
+
 EXPOSE 80
