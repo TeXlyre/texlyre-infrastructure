@@ -1,0 +1,17 @@
+COMPOSE_PROJECT_NAME=texlyre
+ENVIRONMENT=local
+BASE_DOMAIN=localhost
+TRAEFIK_HOST=traefik.localhost
+PORTAINER_HOST=portainer.localhost
+FRONTEND_HOST=texlyre.localhost
+PRODUCTION_DOMAIN=localhost
+
+BIND_IP=127.0.0.1  # Localhost only
+HTTP_PORT=8082
+HTTPS_PORT=8443
+
+# Custom properties generalized for multiple services
+REDIS_PORT=6379  # Redis instance will be created by FilePizza and reused by Texlive
+API_ORIGINS=*  # Too relaxed, so you need to set it depending on how you limit CORS
+## For localhost (without HTTPS), you can remove PEERJS_SERVERS and it will default to public (public requires internet connection)
+PEERJS_SERVERS=http://peerjs.${PRODUCTION_DOMAIN}:${HTTP_PORT}/texlyre/  # This is required by FilePizza

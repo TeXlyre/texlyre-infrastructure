@@ -1,0 +1,179 @@
+services:
+  traefik:
+    image: traefik:v3.0
+    container_name: ${COMPOSE_PROJECT_NAME}-traefik
+    restart: unless-stopped
+    ports:
+      - "${BIND_IP:-127.0.0.1}:${HTTP_PORT:-80}:80"
+      - "${BIND_IP:-127.0.0.1}:${HTTPS_PORT:-443}:443"
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik:/etc/traefik:ro
+      - traefik-certs:/certs
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_HOST}`) || Host(`traefik.${PRODUCTION_DOMAIN:-yourdomain.com}`) || PathPrefix(`/traefik`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.entrypoints=web"
+      - "traefik.http.routers.dashboard-secure.rule=Host(`${TRAEFIK_HOST}`) || Host(`traefik.${PRODUCTION_DOMAIN:-yourdomain.com}`) || PathPrefix(`/traefik`)"
+      - "traefik.http.routers.dashboard-secure.service=api@internal"
+      - "traefik.http.routers.dashboard-secure.entrypoints=websecure"
+      - "traefik.http.routers.dashboard-secure.tls=true"
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: ${COMPOSE_PROJECT_NAME}-portainer
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portainer.rule=Host(`${PORTAINER_HOST}`) || Host(`portainer.${PRODUCTION_DOMAIN:-yourdomain.com}`) || PathPrefix(`/portainer`)"
+      - "traefik.http.routers.portainer.entrypoints=web"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+      - "traefik.http.routers.portainer-secure.rule=Host(`${PORTAINER_HOST}`) || Host(`portainer.${PRODUCTION_DOMAIN:-yourdomain.com}`) || PathPrefix(`/portainer`)"
+      - "traefik.http.routers.portainer-secure.entrypoints=websecure"
+      - "traefik.http.routers.portainer-secure.tls=true"
+      - "traefik.http.routers.portainer-secure.service=portainer"
+
+  texlyre-frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME}-frontend
+    restart: unless-stopped
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/texlyre`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+      - "traefik.http.routers.frontend-secure.rule=PathPrefix(`/texlyre`)"
+      - "traefik.http.routers.frontend-secure.entrypoints=websecure"
+      - "traefik.http.routers.frontend-secure.tls=true"
+      - "traefik.http.routers.frontend-secure.service=frontend"
+
+  texlive-ondemand-server:
+    build:
+      context: ./services/texlive-ondemand-server
+    container_name: ${COMPOSE_PROJECT_NAME}-texlive
+    restart: unless-stopped
+    environment:
+      - PORT=8080
+      - REDIS_PORT=${REDIS_PORT}
+      - API_ORIGINS=${API_ORIGINS}
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.texlive.rule=Host(`texlive.${BASE_DOMAIN}`) || Host(`texlive.${PRODUCTION_DOMAIN:-yourdomain.com}`)"
+      - "traefik.http.routers.texlive.entrypoints=web"
+      - "traefik.http.services.texlive.loadbalancer.server.port=8080"
+      - "traefik.http.routers.texlive-secure.rule=Host(`texlive.${BASE_DOMAIN}`) || Host(`texlive.${PRODUCTION_DOMAIN:-yourdomain.com}`)"
+      - "traefik.http.routers.texlive-secure.entrypoints=websecure"
+      - "traefik.http.routers.texlive-secure.tls=true"
+      - "traefik.http.routers.texlive-secure.service=texlive"
+
+  y-webrtc-server:
+    build:
+      context: ./services/y-webrtc-server
+    container_name: ${COMPOSE_PROJECT_NAME}-ywebrtc
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=1234
+      - API_ORIGINS=${API_ORIGINS}
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ywebrtc.rule=Host(`ywebrtc.${BASE_DOMAIN}`) || Host(`ywebrtc.${PRODUCTION_DOMAIN:-yourdomain.com}`)"
+      - "traefik.http.routers.ywebrtc.entrypoints=web"
+      - "traefik.http.services.ywebrtc.loadbalancer.server.port=1234"
+      - "traefik.http.routers.ywebrtc-secure.rule=Host(`ywebrtc.${BASE_DOMAIN}`) || Host(`ywebrtc.${PRODUCTION_DOMAIN:-yourdomain.com}`)"
+      - "traefik.http.routers.ywebrtc-secure.entrypoints=websecure"
+      - "traefik.http.routers.ywebrtc-secure.tls=true"
+      - "traefik.http.routers.ywebrtc-secure.service=ywebrtc"
+
+  peerjs-server:
+    build:
+      context: ./services/peerjs-server
+      args:
+        SKIP_TESTS: "true"
+    container_name: ${COMPOSE_PROJECT_NAME}-peerjs
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=9000
+      - API_ORIGINS=${API_ORIGINS}
+      - PEERJS_CORS=${API_ORIGINS}
+      - HOST_DOMAIN=${PRODUCTION_DOMAIN}
+      - PEERJS_PORT=9000
+      - PEERJS_PATH=/texlyre
+      - PEERJS_KEY=peerjs
+      - PEERJS_PROXIED=true
+      - PEERJS_ALLOW_DISCOVERY=false
+      - PEERJS_CONCURRENT_LIMIT=5000
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.peerjs.rule=Host(`peerjs.${BASE_DOMAIN}`) || Host(`peerjs.${PRODUCTION_DOMAIN:-yourdomain.com}`)"
+      - "traefik.http.routers.peerjs.entrypoints=web"
+      - "traefik.http.services.peerjs.loadbalancer.server.port=9000"
+      - "traefik.http.routers.peerjs-secure.rule=Host(`peerjs.${BASE_DOMAIN}`) || Host(`peerjs.${PRODUCTION_DOMAIN:-yourdomain.com}`)"
+      - "traefik.http.routers.peerjs-secure.entrypoints=websecure"
+      - "traefik.http.routers.peerjs-secure.tls=true"
+      - "traefik.http.routers.peerjs-secure.service=peerjs"
+
+  filepizza-server:
+    build:
+      context: ./services/filepizza-server
+    container_name: ${COMPOSE_PROJECT_NAME}-filepizza
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - REDIS_PORT=${REDIS_PORT}
+      - PEERJS_SERVERS=${PEERJS_SERVERS}
+      - HOST_DOMAIN=${PRODUCTION_DOMAIN}
+      - API_ORIGINS=${API_ORIGINS}
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.filepizza.rule=Host(`filepizza.${BASE_DOMAIN}`) || Host(`filepizza.${PRODUCTION_DOMAIN:-yourdomain.com}`)"
+      - "traefik.http.routers.filepizza.entrypoints=web"
+      - "traefik.http.services.filepizza.loadbalancer.server.port=8080"
+      - "traefik.http.routers.filepizza-secure.rule=Host(`filepizza.${BASE_DOMAIN}`) || Host(`filepizza.${PRODUCTION_DOMAIN:-yourdomain.com}`)"
+      - "traefik.http.routers.filepizza-secure.entrypoints=websecure"
+      - "traefik.http.routers.filepizza-secure.tls=true"
+      - "traefik.http.routers.filepizza-secure.service=filepizza"
+
+  redis:
+    image: redis:alpine
+    container_name: ${COMPOSE_PROJECT_NAME}-redis
+    restart: unless-stopped
+    networks:
+      - traefik
+    volumes:
+      - redis_data:/data
+
+networks:
+  traefik:
+    name: ${COMPOSE_PROJECT_NAME}-traefik
+    driver: bridge
+
+volumes:
+  traefik-certs:
+  portainer_data:
+  redis_data:

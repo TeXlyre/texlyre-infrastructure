@@ -1,0 +1,26 @@
+COMPOSE_PROJECT_NAME=texlyre
+ENVIRONMENT=local
+BASE_DOMAIN=localhost
+TRAEFIK_HOST=traefik.localhost
+PORTAINER_HOST=portainer.localhost
+FRONTEND_HOST=texlyre.localhost
+PRODUCTION_DOMAIN=[YOUR_IP]  # get your private address and type it in place of [PRIVATE_IP] e.g., windows -> `ipconfig`; linux & mac -> `ifconfig`
+
+BIND_IP=0.0.0.0  # Network accessible
+HTTP_PORT=8082
+HTTPS_PORT=8443
+
+# Specifying the port is needed for services when network hosting (BIND_IP=0.0.0.0)
+#  subdomain will still be served through traefik e.g., http://filepizza.localhost:8082 & https://filepizza.localhost:8443 (HTTP & HTTPS)
+#  direct access will be served without traefik e.g., http://localhost:8083 & http://192.168.0.63:8083 -> FilePizza (HTTP ONLY)
+HTTP_PORT_FILEPIZZA=8083
+HTTP_PORT_TEXLIVE=8084
+HTTP_PORT_YWEBRTC=8085
+HTTP_PORT_PEERJS=8086
+
+# Custom properties generalized for multiple services
+REDIS_PORT=6379  # Redis instance will be created by FilePizza and reused by Texlive
+API_ORIGINS=*  # Too relaxed, so you need to set it depending on how you limit CORS
+## For local network hosting, you cannot remove PEERJS_SERVERS. However, if you plan on using localhost (without HTTPS),
+##  you can still remove the env var and it will default to public (public requires internet connection)
+PEERJS_SERVERS=http://{PRODUCTION_DOMAIN}:${HTTP_PORT_PEERJS}/texlyre/  # This is required by FilePizza
