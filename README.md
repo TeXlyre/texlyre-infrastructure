@@ -21,7 +21,7 @@ git submodule deinit --all -f
 git submodule update --init --recursive --remote
 docker compose up -d --build
 ```
-You can now access TeXlyre lon http://localhost:8082/texlyre/
+You can now access TeXlyre on http://localhost:8082/texlyre/
 
 ## Service Access
 
