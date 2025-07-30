@@ -48,7 +48,7 @@ For production with SSL certificates and domain routing:
 ```bash
 cp envfile.network .env
 # Configure your domain and SSL settings
-docker compose -f docker-compose.yml -f docker-compose.production.yml up -d --build
+docker compose -f docker-compose.yml up -d --build
 ```
 
 ### SSL Configuration
