@@ -46,7 +46,7 @@ HTTP_PORT_PEERJS=8086
 For production with SSL certificates and domain routing:
 
 ```bash
-cp envfile.network .env
+cp envfile.production .env
 # Configure your domain and SSL settings
 docker compose -f docker-compose.yml up -d --build
 ```
