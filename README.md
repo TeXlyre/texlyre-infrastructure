@@ -6,12 +6,13 @@ An omni-repo for deploying all TeXlyre servers locally
 
 ## Quick Start
 
-Before you deploy, you need to copy the `enfile.local` to `.env` and `frontend/userdata.local.json` to `frontend/userdata.json`. 
+Before you deploy, you need to copy the `envfile.local` to `.env` and `frontend/userdata.traefik.json` to `frontend/userdata.json`. 
 You can modify those two newly created configs, which will not be included in the repo (gitignored):
 
 ```bash
 cp envfile.local .env
-cp frontend/userdata.local.json frontend/userdata.json
+cp frontend/userdata.traefik.json frontend/userdata.json
+cp frontend/userdata.traefik.mobile.json frontend/userdata.mobile.json
 ```
 
 Create your local environment file and deploy:
