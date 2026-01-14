@@ -2,15 +2,16 @@
 
 ## Network Hosting
 
-For hosting on your local network or internet, you will need to make a copy of `frontend/userdata.local.json` to 
+For hosting on your local network or internet, you will need to make a copy of `frontend/userdata.traefik.json` to 
 `frontend/userdata.json` and modify it to point to your network address of each service. 
 Use network configuration (and modify the `.env` file after the copy):
 
 ```bash
 cp envfile.network .env
 # Edit .env and set your server IP 
-cp frontend/userdata.local.json frontend/userdata.json
-# Edit frontend/userdata.json to change all links to services to point to the network addresses (see bellow)
+cp frontend/userdata.traefik.json frontend/userdata.json
+cp frontend/userdata.traefik.mobile.json frontend/userdata.mobile.json
+# Edit `frontend/userdata.json` (and `frontend/userdata.mobile.json`) to change all links to services to point to the network addresses (see bellow)
 docker compose -f docker-compose.yml -f docker-compose.custom-ports.yml up -d --build
 ```
 
