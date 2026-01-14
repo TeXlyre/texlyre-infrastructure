@@ -4,7 +4,8 @@ WORKDIR /app
 COPY /frontend/texlyre/package*.json ./
 RUN npm install
 COPY /frontend/texlyre/ ./
-COPY /frontend/userdata.json ./userdata.json
+COPY /frontend/userdata.traefik.json ./userdata.json
+COPY /frontend/userdata.traefik.mobile.json ./userdata.mobile.json
 RUN npm run build:local
 
 FROM nginx:alpine
@@ -15,3 +16,4 @@ RUN sed -i '/application\/javascript/a\    application/javascript               
 
 
 EXPOSE 80
+
