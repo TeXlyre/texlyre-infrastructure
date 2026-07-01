@@ -1,0 +1,5 @@
+{
+    "settings": {
+        "repository-proxy-url": "https://proxy.${PRODUCTION_DOMAIN}/?url="
+    }
+}

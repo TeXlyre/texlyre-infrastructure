@@ -1,0 +1,5 @@
+{
+    "settings": {
+        "repository-proxy-url": "http://proxy.${BASE_DOMAIN}:${HTTP_PORT}/?url="
+    }
+}
