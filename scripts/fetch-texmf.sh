@@ -38,6 +38,17 @@ esac
 
 apk add --no-cache curl tar xz zstd > /dev/null
 
+if ! curl -fsIL "$TEXMF_URL" -o /dev/null; then
+	cat >&2 << MSG
+fetch-texmf: cannot reach $TEXMF_URL
+
+If this is the default URL, the release may not have been published yet. Run the
+build-texlive-full workflow in texlyre-busytex-build, or set TEXMF_ROOT in .env to
+an existing texmf-dist tree on the host.
+MSG
+	exit 1
+fi
+
 echo "fetch-texmf: downloading $TEXMF_URL"
 mkdir -p "$TARGET"
 curl -fsSL "$TEXMF_URL" | $decompress | tar -x --strip-components="$STRIP" -C "$TARGET"

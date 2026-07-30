@@ -31,8 +31,7 @@ API_ORIGINS=*  # Too relaxed, so you need to set it depending on how you limit C
 ##  you can still remove the env var and it will default to public (public requires internet connection)
 PEERJS_SERVERS=http://{PRODUCTION_DOMAIN}:${HTTP_PORT_PEERJS}/texlyre/  # This is required by FilePizza
 
-# TeXLive 2026 server (profile: texlive2026): supply a texmf-dist tree one of two ways.
-## Fetched into a named volume on first start (tar.gz, tar.xz or tar.zst)
-#TEXMF_URL=https://github.com/TeXlyre/texlyre-busytex-build/releases/latest/download/texmf-dist.tar.zst
-## Or an existing tree on the host, absolute path, used as a read-only bind mount instead
+# TeXLive 2026 server (profile: texlive2026), downloaded into a named volume on first start
+TEXMF_URL=https://github.com/TeXlyre/texlyre-busytex-build/releases/download/texlive-full-2026/texmf-dist.tar.zst
+## Or point at an existing texmf-dist tree on the host, absolute path, to skip the download
 #TEXMF_ROOT=/absolute/path/to/texlive-full/texmf-dist

@@ -41,7 +41,7 @@ HTTP_PORT_TEXLIVE2026=8087
 * **TeXlive**: http://[YOUR_IP]:8084
 * **TeXLive 2026**: http://[YOUR_IP]:8087
 
-**Traefik Routing (still available):**
+**Traefik Routing:**
 * **Traefik Dashboard**: http://traefik.[YOUR_IP]:8082
 * **Portainer**: http://portainer.[YOUR_IP]:8082
 * **TeXlyre Frontend**: http://[YOUR_IP]:8082/texlyre/
@@ -111,8 +111,8 @@ The tree is supplied by whichever of these is set:
 
 | Variable | Effect |
 |---|---|
-| `TEXMF_URL` | `texlive2026-texmf` downloads and unpacks the archive into the `texmf` named volume on first start |
-| `TEXMF_ROOT` | absolute host path bind mounted read-only, no download |
+| `TEXMF_URL` | default; `texlive2026-texmf` downloads and unpacks the archive into the `texmf` named volume on first start |
+| `TEXMF_ROOT` | absolute host path bind mounted read-only, no download, overrides the URL |
 | neither | the init container fails with instructions, and the server does not start |
 
 `TEXMF_STRIP` controls `tar --strip-components` and defaults to `1`, matching an
@@ -127,14 +127,12 @@ docker compose --profile texlive2026 up -d
 download stops the server from starting against an empty tree rather than serving 301s
 for every request.
 
-There is no published archive yet: `texlyre-busytex-build` releases only the WASM
-bundles (`texlive-basic.data` and friends) under its `build_wasm_*` tags. Producing the
-tree means running the ISO download, `install-tl`, format generation and pruning steps
-from that repository's Makefile, which is why it cannot be done from this compose file.
-Adding the pruned tree as a release asset there would make `TEXMF_URL` point at a stable
-URL and remove the manual step entirely. The pruned tree excludes `doc/` and `source/`,
-which are the bulk of texmf-dist, so it should compress well within the 2 GB release
-asset limit.
+The archive is produced by the `build-texlive-full` workflow in `texlyre-busytex-build`,
+which downloads the TeX Live 2026 ISO, runs `install-tl` with `scheme-full`, prunes
+`doc/`, `source/`, `scripts/`, `bin/` and `tlpkg/`, and publishes the result to the
+`texlive-full-2026` release. That tag is stable, so the default `TEXMF_URL` keeps working
+across rebuilds. If the release has not been published yet, the init container says so
+rather than failing with a bare download error.
 
 Because it sits behind the `texlive2026` profile, plain `docker compose up -d` leaves it
 untouched. The publish workflow builds it regardless of the profile.
@@ -173,24 +171,3 @@ When `RECIPES_DISPATCH_TOKEN` is configured, each successful publish dispatches 
 `image-published` event to `TeXlyre/chelys-recipes` with the service name and image
 reference, so the matching recipe version can be raised automatically. Without the
 secret, that step is skipped and publishing works as normal.
-
-## Networking Requirements
-
-### Local Network
-- Configure router port forwarding if accessing from outside local network
-- Ensure firewall allows configured ports
-
-### Production
-- DNS A records for domain and subdomains
-- SSL certificate management (Let's Encrypt automatic renewal)
-- Reverse proxy configuration
-- Security headers and rate limiting
-
-### Traefik Docker Provider
-
-`traefik/traefik.yml` no longer pins `providers.docker.network`. The previous value
-(`traefik`) did not match the actual network name (`${COMPOSE_PROJECT_NAME}-traefik`),
-so Traefik was falling back to whichever network each container happened to be on.
-Leaving it unset makes that fallback explicit and keeps working if you rename the
-project. If you ever attach a service to more than one network, pin the resolved name
-here.

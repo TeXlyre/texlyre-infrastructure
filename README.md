@@ -34,7 +34,7 @@ docker compose up -d
 
 ## Frontend Configuration
 
-The frontend image ships TeXlyre's own defaults and reads a deployment override at
+The frontend image is loaded TeXlyre's own defaults and reads a deployment override at
 container start. `TEXLYRE_USERDATA_VARIANT` in `.env` selects a file from
 `frontend/userdata.overrides/`, which is deep-merged onto those defaults and written
 to `userdata.local.json` inside the container.
@@ -66,44 +66,20 @@ All services are accessible at http://localhost:8082 with subdomain routing:
 * **Y-WebRTC**: http://ywebrtc.localhost:8082
 * **PeerJS**: http://peerjs.localhost:8082
 * **TeXlive**: http://texlive.localhost:8082
-* **TeXLive 2026**: http://texlive2026.localhost:8082 (opt-in, see below)
+* **TeXLive 2026**: http://texlive2026.localhost:8082 (`--profile texlive2026`)
 
 ## TeXLive 2026 Server
 
-`texlive2026-server` serves TeX Live 2026 files on demand for busytex, from the
-`texlive-server` directory of the [texlyre-busytex-build](https://github.com/TeXlyre/texlyre-busytex-build)
-submodule. Unlike the other services it does not ship its own payload: it needs a
-`texmf-dist` tree, which is a build artifact rather than something the image can
-contain. It therefore sits behind a compose profile and does not start by default.
-
-Point `TEXMF_URL` at a tar archive of the tree and it is downloaded into a named
-volume on first start by the `texlive2026-texmf` init container:
-
-```bash
-# .env
-TEXMF_URL=https://example.org/texmf-dist.tar.zst
-```
-
-If you already have a tree on disk, give an absolute path instead and it is bind
-mounted read-only, skipping the download:
-
-```bash
-# .env
-TEXMF_ROOT=/absolute/path/to/texlive-full/texmf-dist
-```
-
-Either way:
+`texlive2026-server` serves TeX Live 2026 files on demand for busytex. It is opt-in
+because its texmf-dist tree is a large one-time download rather than part of an image:
 
 ```bash
 docker compose --profile texlive2026 up -d
 ```
 
-The volume is populated once and reused; the init container exits immediately on
-subsequent starts. Build the tree with `make build/texlive-full.txt` in
-texlyre-busytex-build, or extract it from the TeX Live 2026 ISO.
-
-TeXlyre reaches it through the `latex-busytex-endpoint` setting, which the frontend
-overrides already point at `texlive2026.${BASE_DOMAIN}`.
+`TEXMF_URL` in `.env` already points at the published tree, which is fetched into a
+named volume on first start and reused afterwards. Set `TEXMF_ROOT` to an absolute path
+instead if you have a tree on disk already. See [ADVANCED.md](ADVANCED.md) for details.
 
 ## Publishing Images
 
@@ -127,7 +103,7 @@ and commit. A tag that already exists is skipped, so releasing a new build means
 bumping the tag in `docker-compose.yml`. Use the workflow's `force` input to
 deliberately overwrite.
 
-Renovate watches the submodules and opens a PR when a tracked branch moves; bump the
+Renovate watches the submodules and opens a PR when a tracked branch moves. Bump the
 matching image tag in that PR.
 
 ## Management Commands
