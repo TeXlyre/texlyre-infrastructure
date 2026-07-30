@@ -13,3 +13,6 @@
 [submodule "services/filepizza-server"]
 	path = services/filepizza-server
 	url = https://github.com/TeXlyre/filepizza-server.git
+[submodule "services/texlyre-busytex-build"]
+	path = services/texlyre-busytex-build
+	url = https://github.com/TeXlyre/texlyre-busytex-build.git

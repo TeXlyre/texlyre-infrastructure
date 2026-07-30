@@ -9,8 +9,16 @@ PRODUCTION_DOMAIN=yourdomain.com   # Need to set the A Records manually
 HTTP_PORT=80
 HTTPS_PORT=443
 
+# Frontend userdata: selects frontend/userdata.overrides/<variant>.json
+TEXLYRE_USERDATA_VARIANT=production
+## Optional JSON object merged on top of the variant
+#TEXLYRE_USERDATA=
+
 # Custom properties generalized for multiple services
 REDIS_PORT=6379  # Redis instance will be created by FilePizza and reused by Texlive
 API_ORIGINS=*  # Too relaxed, so you need to set it depending on how you limit CORS
 ## Remove PEERJS_SERVERS to revert to using public signaling server (provided by peerjs) or set the link to wherever yourdomain.com points
 PEERJS_SERVERS=wss://peerjs.${PRODUCTION_DOMAIN}/texlyre/  # This is required by FilePizza
+
+# TeXLive 2026 server (profile: texlive2026), absolute host path to a texmf-dist tree
+#TEXMF_ROOT=/absolute/path/to/texlive-full/texmf-dist

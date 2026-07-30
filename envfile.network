@@ -17,6 +17,12 @@ HTTP_PORT_FILEPIZZA=8083
 HTTP_PORT_TEXLIVE=8084
 HTTP_PORT_YWEBRTC=8085
 HTTP_PORT_PEERJS=8086
+HTTP_PORT_TEXLIVE2026=8087
+
+# Frontend userdata: selects frontend/userdata.overrides/<variant>.json
+TEXLYRE_USERDATA_VARIANT=traefik
+## Override individual service URLs for direct (non-traefik) access, e.g.
+#TEXLYRE_USERDATA={"settings":{"collab-signaling-servers":"ws://[YOUR_IP]:8085/","file-sync-server-url":"http://[YOUR_IP]:8083","latex-texlive-endpoint":"http://[YOUR_IP]:8084","latex-busytex-endpoint":"http://[YOUR_IP]:8087"}}
 
 # Custom properties generalized for multiple services
 REDIS_PORT=6379  # Redis instance will be created by FilePizza and reused by Texlive
@@ -24,3 +30,6 @@ API_ORIGINS=*  # Too relaxed, so you need to set it depending on how you limit C
 ## For local network hosting, you cannot remove PEERJS_SERVERS. However, if you plan on using localhost (without HTTPS),
 ##  you can still remove the env var and it will default to public (public requires internet connection)
 PEERJS_SERVERS=http://{PRODUCTION_DOMAIN}:${HTTP_PORT_PEERJS}/texlyre/  # This is required by FilePizza
+
+# TeXLive 2026 server (profile: texlive2026), absolute host path to a texmf-dist tree
+#TEXMF_ROOT=/absolute/path/to/texlive-full/texmf-dist

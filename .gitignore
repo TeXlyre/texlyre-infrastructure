@@ -1,8 +1,11 @@
 .env*
 .idea/
+node_modules/
 frontend/texlyre/node_modules/
 frontend/texlyre/dist/
 frontend/userdata.json
+frontend/userdata.mobile.json
+frontend/texmf/
 services/*/node_modules/
 services/*/dist/
 services/*/.env

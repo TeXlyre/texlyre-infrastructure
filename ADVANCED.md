@@ -2,18 +2,24 @@
 
 ## Network Hosting
 
-For hosting on your local network or internet, you will need to make a copy of `frontend/userdata.traefik.json` to 
-`frontend/userdata.json` and modify it to point to your network address of each service. 
-Use network configuration (and modify the `.env` file after the copy):
+For hosting on your local network or internet, use the network configuration and point
+the frontend at your network addresses:
 
 ```bash
 cp envfile.network .env
-# Edit .env and set your server IP 
-cp frontend/userdata.traefik.json frontend/userdata.json
-cp frontend/userdata.traefik.mobile.json frontend/userdata.mobile.json
-# Edit `frontend/userdata.json` (and `frontend/userdata.mobile.json`) to change all links to services to point to the network addresses (see bellow)
-docker compose -f docker-compose.yml -f docker-compose.custom-ports.yml up -d --build
+# Edit .env and set PRODUCTION_DOMAIN to your server IP
+docker compose -f docker-compose.yml -f docker-compose.custom-ports.yml up -d
 ```
+
+Traefik subdomain routing keeps working. If you also want the frontend to talk to the
+directly exposed ports instead of going through Traefik, uncomment and edit
+`TEXLYRE_USERDATA` in `.env`:
+
+```env
+TEXLYRE_USERDATA={"settings":{"collab-signaling-servers":"ws://[YOUR_IP]:8085/","file-sync-server-url":"http://[YOUR_IP]:8083","latex-texlive-endpoint":"http://[YOUR_IP]:8084","latex-busytex-endpoint":"http://[YOUR_IP]:8087"}}
+```
+
+That layer is merged last, so it overrides whatever `TEXLYRE_USERDATA_VARIANT` set.
 
 ### Required Environment Variables
 
@@ -23,6 +29,7 @@ HTTP_PORT_FILEPIZZA=8083
 HTTP_PORT_TEXLIVE=8084
 HTTP_PORT_YWEBRTC=8085
 HTTP_PORT_PEERJS=8086
+HTTP_PORT_TEXLIVE2026=8087
 ```
 
 ### Network Access URLs
@@ -32,6 +39,7 @@ HTTP_PORT_PEERJS=8086
 * **Y-WebRTC**: http://[YOUR_IP]:8085
 * **PeerJS**: http://[YOUR_IP]:8086
 * **TeXlive**: http://[YOUR_IP]:8084
+* **TeXLive 2026**: http://[YOUR_IP]:8087
 
 **Traefik Routing (still available):**
 * **Traefik Dashboard**: http://traefik.[YOUR_IP]:8082
@@ -41,6 +49,7 @@ HTTP_PORT_PEERJS=8086
 * **Y-WebRTC**: http://ywebrtc.[YOUR_IP]:8082
 * **PeerJS**: http://peerjs.[YOUR_IP]:8082
 * **TeXlive**: http://texlive.[YOUR_IP]:8082
+* **TeXLive 2026**: http://texlive2026.[YOUR_IP]:8082
 
 ## Production Deployment
 
@@ -49,8 +58,11 @@ For production with SSL certificates and domain routing:
 ```bash
 cp envfile.production .env
 # Configure your domain and SSL settings
-docker compose -f docker-compose.yml up -d --build
+docker compose up -d
 ```
+
+`envfile.production` sets `TEXLYRE_USERDATA_VARIANT=production`, which points the
+frontend at `https://` and `wss://` subdomains of `PRODUCTION_DOMAIN`.
 
 ### SSL Configuration
 
@@ -76,16 +88,65 @@ TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_EMAIL=your@email.com
 * **Y-WebRTC**: https://ywebrtc.yourdomain.com
 * **PeerJS**: https://peerjs.yourdomain.com
 * **TeXlive**: https://texlive.yourdomain.com
+* **TeXLive 2026**: https://texlive2026.yourdomain.com
 
 ## Custom Port Configuration
 
 When using network hosting, custom ports prevent conflicts and provide direct access:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.custom-ports.yml up -d --build
+docker compose -f docker-compose.yml -f docker-compose.custom-ports.yml up -d
 ```
 
 This configuration exposes services on dedicated ports while maintaining subdomain routing through Traefik.
+
+## TeXLive 2026 Server
+
+The service builds from `services/texlyre-busytex-build/texlive-server`, which is a
+subdirectory of the submodule rather than its root. It requires a TeX Live 2026
+`texmf-dist` tree on the host, mounted read-only at `/texmf`, and caches path lookups
+in the shared `redis` service.
+
+```bash
+TEXMF_ROOT=/absolute/path/to/texlive-full/texmf-dist
+docker compose --profile texlive2026 up -d
+```
+
+Relative paths work for bare-metal runs only; Docker needs an absolute path. Build the
+tree with `make build/texlive-full.txt` in the busytex repo, or extract it from the ISO.
+
+Because it sits behind the `texlive2026` profile, plain `docker compose up -d` leaves it
+untouched. The publish workflow builds it regardless of the profile.
+
+## Image Publishing and Versions
+
+Every buildable service in `docker-compose.yml` declares both an `image:` tag and an
+`x-publish:` block. `scripts/publish-matrix.cjs` reads that file and emits the CI build
+matrix, so the compose file is the only place a version is decided.
+
+Versions here are owned by this repo, not inherited from the upstream forks, because a
+submodule pins a commit rather than a release. Bump the tag whenever you move a
+submodule pointer.
+
+Images are labelled with `org.opencontainers.image.source` and `.revision` pointing at
+the submodule's own repository and commit, since the building repo is not the source
+repo. Use `x-publish.source` when the build context is not the submodule root, as with
+`texlive2026-server`.
+
+To publish a new build:
+
+1. Move the submodule pointer (or merge the Renovate PR that does).
+2. Bump the matching `image:` tag in `docker-compose.yml`.
+3. Push to `main`.
+
+Existing tags are never overwritten unless you run the workflow manually with `force`.
+
+### Consuming from Chelys
+
+When `RECIPES_DISPATCH_TOKEN` is configured, each successful publish dispatches an
+`image-published` event to `TeXlyre/chelys-recipes` with the service name and image
+reference, so the matching recipe version can be raised automatically. Without the
+secret, that step is skipped and publishing works as normal.
 
 ## Networking Requirements
 
@@ -98,3 +159,12 @@ This configuration exposes services on dedicated ports while maintaining subdoma
 - SSL certificate management (Let's Encrypt automatic renewal)
 - Reverse proxy configuration
 - Security headers and rate limiting
+
+### Traefik Docker Provider
+
+`traefik/traefik.yml` no longer pins `providers.docker.network`. The previous value
+(`traefik`) did not match the actual network name (`${COMPOSE_PROJECT_NAME}-traefik`),
+so Traefik was falling back to whichever network each container happened to be on.
+Leaving it unset makes that fallback explicit and keeps working if you rename the
+project. If you ever attach a service to more than one network, pin the resolved name
+here.

@@ -3,6 +3,10 @@ services:
     ports:
       - "${BIND_IP:-127.0.0.1}:${HTTP_PORT_TEXLIVE}:8080"
 
+  texlive2026-server:
+    ports:
+      - "${BIND_IP:-127.0.0.1}:${HTTP_PORT_TEXLIVE2026}:8070"
+
   y-webrtc-server:
     ports:
       - "${BIND_IP:-127.0.0.1}:${HTTP_PORT_YWEBRTC}:1234"

@@ -43,11 +43,25 @@ services:
       - "traefik.http.routers.portainer-secure.service=portainer"
 
   texlyre-frontend:
+    image: ghcr.io/texlyre/texlyre-frontend:1.0.0
     build:
       context: .
       dockerfile: frontend/Dockerfile
+    x-publish:
+      source: frontend/texlyre
+      platforms:
+        - linux/amd64
+        - linux/arm64
     container_name: ${COMPOSE_PROJECT_NAME}-frontend
     restart: unless-stopped
+    environment:
+      - TEXLYRE_USERDATA_VARIANT=${TEXLYRE_USERDATA_VARIANT:-}
+      - TEXLYRE_USERDATA=${TEXLYRE_USERDATA:-}
+      - TEXLYRE_USERDATA_MOBILE=${TEXLYRE_USERDATA_MOBILE:-}
+      - BASE_DOMAIN=${BASE_DOMAIN}
+      - PRODUCTION_DOMAIN=${PRODUCTION_DOMAIN}
+      - HTTP_PORT=${HTTP_PORT}
+      - HTTPS_PORT=${HTTPS_PORT:-443}
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
@@ -63,8 +77,12 @@ services:
       - "traefik.http.routers.frontend-secure.service=frontend"
 
   texlive-ondemand-server:
+    image: ghcr.io/texlyre/texlive-ondemand-server:1.0.0
     build:
       context: ./services/texlive-ondemand-server
+    x-publish:
+      platforms:
+        - linux/amd64
     container_name: ${COMPOSE_PROJECT_NAME}-texlive
     restart: unless-stopped
     environment:
@@ -83,9 +101,47 @@ services:
       - "traefik.http.routers.texlive-secure.tls=true"
       - "traefik.http.routers.texlive-secure.service=texlive"
 
+  texlive2026-server:
+    image: ghcr.io/texlyre/texlive2026-server:1.0.0
+    build:
+      context: ./services/texlyre-busytex-build/texlive-server
+    x-publish:
+      source: services/texlyre-busytex-build
+      platforms:
+        - linux/amd64
+    profiles:
+      - texlive2026
+    container_name: ${COMPOSE_PROJECT_NAME}-texlive2026
+    restart: unless-stopped
+    environment:
+      - PORT=8070
+      - REDIS_URL=redis://redis:6379
+      - API_ORIGINS=${API_ORIGINS}
+      - TEXMF_ROOT=/texmf
+    volumes:
+      - ${TEXMF_ROOT:-./frontend/texmf}:/texmf:ro
+    networks:
+      - traefik
+    depends_on:
+      - redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.texlive2026.rule=Host(`texlive2026.${BASE_DOMAIN}`) || Host(`texlive2026.${PRODUCTION_DOMAIN:-yourdomain.com}`)"
+      - "traefik.http.routers.texlive2026.entrypoints=web"
+      - "traefik.http.services.texlive2026.loadbalancer.server.port=8070"
+      - "traefik.http.routers.texlive2026-secure.rule=Host(`texlive2026.${BASE_DOMAIN}`) || Host(`texlive2026.${PRODUCTION_DOMAIN:-yourdomain.com}`)"
+      - "traefik.http.routers.texlive2026-secure.entrypoints=websecure"
+      - "traefik.http.routers.texlive2026-secure.tls=true"
+      - "traefik.http.routers.texlive2026-secure.service=texlive2026"
+
   y-webrtc-server:
+    image: ghcr.io/texlyre/y-webrtc-server:1.0.0
     build:
       context: ./services/y-webrtc-server
+    x-publish:
+      platforms:
+        - linux/amd64
+        - linux/arm64
     container_name: ${COMPOSE_PROJECT_NAME}-ywebrtc
     restart: unless-stopped
     environment:
@@ -105,10 +161,15 @@ services:
       - "traefik.http.routers.ywebrtc-secure.service=ywebrtc"
 
   peerjs-server:
+    image: ghcr.io/texlyre/peerjs-server:1.0.0
     build:
       context: ./services/peerjs-server
       args:
         SKIP_TESTS: "true"
+    x-publish:
+      platforms:
+        - linux/amd64
+        - linux/arm64
     container_name: ${COMPOSE_PROJECT_NAME}-peerjs
     restart: unless-stopped
     environment:
@@ -136,8 +197,13 @@ services:
       - "traefik.http.routers.peerjs-secure.service=peerjs"
 
   filepizza-server:
+    image: ghcr.io/texlyre/filepizza-server:1.0.0
     build:
       context: ./services/filepizza-server
+    x-publish:
+      platforms:
+        - linux/amd64
+        - linux/arm64
     container_name: ${COMPOSE_PROJECT_NAME}-filepizza
     restart: unless-stopped
     environment:
