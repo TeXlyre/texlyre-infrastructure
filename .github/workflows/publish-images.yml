@@ -1,0 +1,112 @@
+name: Publish Images
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - docker-compose.yml
+      - services/**
+      - frontend/**
+      - .github/workflows/publish-images.yml
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Rebuild and overwrite tags that already exist
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.generate.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - run: npm install --no-save js-yaml
+
+      - id: generate
+        run: node scripts/publish-matrix.cjs docker-compose.yml >> "$GITHUB_OUTPUT"
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: matrix
+    env:
+      DISPATCH_TOKEN: ${{ secrets.RECIPES_DISPATCH_TOKEN }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.matrix.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: decide
+        run: |
+          if docker manifest inspect "${{ matrix.image }}" > /dev/null 2>&1 \
+            && [ "${{ github.event.inputs.force }}" != "true" ]; then
+            echo "build=false" >> "$GITHUB_OUTPUT"
+            echo "Skipped \`${{ matrix.image }}\`, tag already published. Bump it in docker-compose.yml to release a new build." \
+              >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - id: revision
+        if: steps.decide.outputs.build == 'true'
+        run: |
+          sha=$(git -C "${{ matrix.source }}" rev-parse HEAD 2>/dev/null || echo unknown)
+          url=$(git -C "${{ matrix.source }}" remote get-url origin 2>/dev/null \
+            || echo "${{ github.server_url }}/${{ github.repository }}")
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "url=${url%.git}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-qemu-action@v3
+        if: steps.decide.outputs.build == 'true' && contains(matrix.platforms, 'arm64')
+
+      - uses: docker/setup-buildx-action@v3
+        if: steps.decide.outputs.build == 'true'
+
+      - id: push
+        if: steps.decide.outputs.build == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          build-args: ${{ matrix.args }}
+          platforms: ${{ matrix.platforms }}
+          push: true
+          provenance: false
+          tags: ${{ matrix.image }}
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+          labels: |
+            org.opencontainers.image.title=${{ matrix.name }}
+            org.opencontainers.image.source=${{ steps.revision.outputs.url }}
+            org.opencontainers.image.revision=${{ steps.revision.outputs.sha }}
+
+      - if: steps.push.outcome == 'success'
+        run: |
+          echo "Published \`${{ matrix.image }}\` from ${{ steps.revision.outputs.sha }}" >> "$GITHUB_STEP_SUMMARY"
+
+      - if: steps.push.outcome == 'success' && env.DISPATCH_TOKEN != ''
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.RECIPES_DISPATCH_TOKEN }}
+          repository: TeXlyre/chelys-recipes
+          event-type: image-published
+          client-payload: '{"recipe": "${{ matrix.name }}", "image": "${{ matrix.image }}"}'

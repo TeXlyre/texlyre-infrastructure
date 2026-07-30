@@ -101,6 +101,22 @@ services:
       - "traefik.http.routers.texlive-secure.tls=true"
       - "traefik.http.routers.texlive-secure.service=texlive"
 
+  texlive2026-texmf:
+    image: alpine:3.20
+    profiles:
+      - texlive2026
+    container_name: ${COMPOSE_PROJECT_NAME}-texlive2026-texmf
+    restart: "no"
+    environment:
+      - TEXMF_URL=${TEXMF_URL:-}
+      - TEXMF_STRIP=${TEXMF_STRIP:-1}
+    volumes:
+      - ${TEXMF_ROOT:-texmf}:/texmf
+      - ./scripts/fetch-texmf.sh:/fetch-texmf.sh:ro
+    entrypoint: ["/bin/sh", "/fetch-texmf.sh"]
+    networks:
+      - traefik
+
   texlive2026-server:
     image: ghcr.io/texlyre/texlive2026-server:1.0.0
     build:
@@ -119,11 +135,14 @@ services:
       - API_ORIGINS=${API_ORIGINS}
       - TEXMF_ROOT=/texmf
     volumes:
-      - ${TEXMF_ROOT:-./frontend/texmf}:/texmf:ro
+      - ${TEXMF_ROOT:-texmf}:/texmf:ro
     networks:
       - traefik
     depends_on:
-      - redis
+      redis:
+        condition: service_started
+      texlive2026-texmf:
+        condition: service_completed_successfully
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.texlive2026.rule=Host(`texlive2026.${BASE_DOMAIN}`) || Host(`texlive2026.${PRODUCTION_DOMAIN:-yourdomain.com}`)"
@@ -243,3 +262,4 @@ volumes:
   traefik-certs:
   portainer_data:
   redis_data:
+  texmf:

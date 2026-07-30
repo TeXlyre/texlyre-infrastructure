@@ -107,13 +107,34 @@ subdirectory of the submodule rather than its root. It requires a TeX Live 2026
 `texmf-dist` tree on the host, mounted read-only at `/texmf`, and caches path lookups
 in the shared `redis` service.
 
+The tree is supplied by whichever of these is set:
+
+| Variable | Effect |
+|---|---|
+| `TEXMF_URL` | `texlive2026-texmf` downloads and unpacks the archive into the `texmf` named volume on first start |
+| `TEXMF_ROOT` | absolute host path bind mounted read-only, no download |
+| neither | the init container fails with instructions, and the server does not start |
+
+`TEXMF_STRIP` controls `tar --strip-components` and defaults to `1`, matching an
+archive whose single top-level directory is `texmf-dist`.
+
 ```bash
-TEXMF_ROOT=/absolute/path/to/texlive-full/texmf-dist
+TEXMF_URL=https://example.org/texmf-dist.tar.zst
 docker compose --profile texlive2026 up -d
 ```
 
-Relative paths work for bare-metal runs only; Docker needs an absolute path. Build the
-tree with `make build/texlive-full.txt` in the busytex repo, or extract it from the ISO.
+`texlive2026-server` waits on `service_completed_successfully`, so a failed or missing
+download stops the server from starting against an empty tree rather than serving 301s
+for every request.
+
+There is no published archive yet: `texlyre-busytex-build` releases only the WASM
+bundles (`texlive-basic.data` and friends) under its `build_wasm_*` tags. Producing the
+tree means running the ISO download, `install-tl`, format generation and pruning steps
+from that repository's Makefile, which is why it cannot be done from this compose file.
+Adding the pruned tree as a release asset there would make `TEXMF_URL` point at a stable
+URL and remove the manual step entirely. The pruned tree excludes `doc/` and `source/`,
+which are the bulk of texmf-dist, so it should compress well within the 2 GB release
+asset limit.
 
 Because it sits behind the `texlive2026` profile, plain `docker compose up -d` leaves it
 untouched. The publish workflow builds it regardless of the profile.
@@ -132,6 +153,11 @@ Images are labelled with `org.opencontainers.image.source` and `.revision` point
 the submodule's own repository and commit, since the building repo is not the source
 repo. Use `x-publish.source` when the build context is not the submodule root, as with
 `texlive2026-server`.
+
+Until the first successful run of that workflow no tags exist yet, which is harmless:
+every service keeps its `build:` context, so `docker compose up -d --build` compiles from
+the submodules and tags the result under the GHCR name locally. The registry only becomes
+the source once something has been pushed there.
 
 To publish a new build:
 

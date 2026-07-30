@@ -1,18 +1,24 @@
 [submodule "frontend/texlyre"]
 	path = frontend/texlyre
 	url = https://github.com/TeXlyre/texlyre.git
+	branch = main
 [submodule "services/y-webrtc-server"]
 	path = services/y-webrtc-server
 	url = https://github.com/TeXlyre/y-webrtc-server.git
+	branch = master
 [submodule "services/peerjs-server"]
 	path = services/peerjs-server
 	url = https://github.com/TeXlyre/peerjs-server.git
+	branch = master
 [submodule "services/texlive-ondemand-server"]
 	path = services/texlive-ondemand-server
 	url = https://github.com/TeXlyre/texlive-ondemand-server.git
+	branch = master
 [submodule "services/filepizza-server"]
 	path = services/filepizza-server
 	url = https://github.com/TeXlyre/filepizza-server.git
+	branch = main
 [submodule "services/texlyre-busytex-build"]
 	path = services/texlyre-busytex-build
 	url = https://github.com/TeXlyre/texlyre-busytex-build.git
+	branch = main

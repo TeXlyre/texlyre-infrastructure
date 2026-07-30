@@ -2,7 +2,7 @@
 
 An omni-repo for deploying all TeXlyre servers locally
 
-![TeXlyre Infrastructure Diagram](./assets/infrastructure.png)
+![TeXlyre Infrastructure Diagram](./showcase/infrastructure.png)
 
 ## Quick Start
 
@@ -12,20 +12,24 @@ Copy `envfile.local` to `.env`. That file is gitignored, so your local settings 
 cp envfile.local .env
 ```
 
-Deploy using the images published by this repo:
+Create your local environment file and deploy:
 
 ```bash
 git submodule deinit --all -f
 git submodule update --init --recursive --remote
-docker compose up -d
+docker compose up -d --build
 ```
 
 You can now access TeXlyre on http://localhost:8082/texlyre/
 
-To build everything from the submodule sources instead of pulling, add `--build`:
+Each service declares both a `build:` context and a published `image:` tag, so `--build`
+compiles from the submodule sources and tags the result under that name locally.
+
+You can also skip the build entirely:
 
 ```bash
-docker compose up -d --build
+docker compose pull
+docker compose up -d
 ```
 
 ## Frontend Configuration
@@ -68,19 +72,35 @@ All services are accessible at http://localhost:8082 with subdomain routing:
 
 `texlive2026-server` serves TeX Live 2026 files on demand for busytex, from the
 `texlive-server` directory of the [texlyre-busytex-build](https://github.com/TeXlyre/texlyre-busytex-build)
-submodule. It needs a `texmf-dist` tree on the host, so it sits behind a compose
-profile and does not start by default.
+submodule. Unlike the other services it does not ship its own payload: it needs a
+`texmf-dist` tree, which is a build artifact rather than something the image can
+contain. It therefore sits behind a compose profile and does not start by default.
 
-Set an absolute path in `.env` and enable the profile:
+Point `TEXMF_URL` at a tar archive of the tree and it is downloaded into a named
+volume on first start by the `texlive2026-texmf` init container:
+
+```bash
+# .env
+TEXMF_URL=https://example.org/texmf-dist.tar.zst
+```
+
+If you already have a tree on disk, give an absolute path instead and it is bind
+mounted read-only, skipping the download:
 
 ```bash
 # .env
 TEXMF_ROOT=/absolute/path/to/texlive-full/texmf-dist
 ```
 
+Either way:
+
 ```bash
 docker compose --profile texlive2026 up -d
 ```
+
+The volume is populated once and reused; the init container exits immediately on
+subsequent starts. Build the tree with `make build/texlive-full.txt` in
+texlyre-busytex-build, or extract it from the TeX Live 2026 ISO.
 
 TeXlyre reaches it through the `latex-busytex-endpoint` setting, which the frontend
 overrides already point at `texlive2026.${BASE_DOMAIN}`.
@@ -120,6 +140,12 @@ git submodule update --remote --merge
 Pull newly published images:
 ```bash
 docker compose pull
+```
+
+Before the first publish, restrict that to the third-party images so the not-yet-pushed
+tags do not error:
+```bash
+docker compose pull --ignore-buildable
 ```
 
 Stop containers:

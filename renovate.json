@@ -1,0 +1,12 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "enabledManagers": ["git-submodules"],
+  "git-submodules": {
+    "enabled": true
+  },
+  "commitMessagePrefix": "submodule:",
+  "prBodyNotes": [
+    "Bump the matching `image:` tag in `docker-compose.yml` in this PR so `Publish Images` releases the new build."
+  ]
+}

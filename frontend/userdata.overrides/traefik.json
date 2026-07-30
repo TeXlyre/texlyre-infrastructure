@@ -1,0 +1,9 @@
+{
+  "settings": {
+    "collab-signaling-servers": "ws://ywebrtc.${BASE_DOMAIN}:${HTTP_PORT}/",
+    "file-sync-server-url": "http://filepizza.${BASE_DOMAIN}:${HTTP_PORT}",
+    "latex-texlive-endpoint": "http://texlive.${BASE_DOMAIN}:${HTTP_PORT}",
+    "latex-busytex-endpoint": "http://texlive2026.${BASE_DOMAIN}:${HTTP_PORT}",
+    "theme-variant": "dark"
+  }
+}
