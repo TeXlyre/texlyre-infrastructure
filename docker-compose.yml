@@ -43,7 +43,7 @@ services:
       - "traefik.http.routers.portainer-secure.service=portainer"
 
   texlyre-frontend:
-    image: ghcr.io/texlyre/texlyre-frontend:1.0.0
+    image: ghcr.io/texlyre/texlyre-frontend:0.10.1
     build:
       context: .
       dockerfile: frontend/Dockerfile
@@ -77,7 +77,7 @@ services:
       - "traefik.http.routers.frontend-secure.service=frontend"
 
   texlive-ondemand-server:
-    image: ghcr.io/texlyre/texlive-ondemand-server:1.0.0
+    image: ghcr.io/texlyre/texlive-ondemand-server:2020.0.0
     build:
       context: ./services/texlive-ondemand-server
     x-publish:
@@ -118,7 +118,7 @@ services:
       - traefik
 
   texlive2026-server:
-    image: ghcr.io/texlyre/texlive2026-server:1.0.0
+    image: ghcr.io/texlyre/texlive2026-server:texlive-full-2026
     build:
       context: ./services/texlyre-busytex-build/texlive-server
     x-publish:
@@ -154,7 +154,7 @@ services:
       - "traefik.http.routers.texlive2026-secure.service=texlive2026"
 
   y-webrtc-server:
-    image: ghcr.io/texlyre/y-webrtc-server:1.0.0
+    image: ghcr.io/texlyre/y-webrtc-server:10.3.0
     build:
       context: ./services/y-webrtc-server
     x-publish:
@@ -180,7 +180,7 @@ services:
       - "traefik.http.routers.ywebrtc-secure.service=ywebrtc"
 
   peerjs-server:
-    image: ghcr.io/texlyre/peerjs-server:1.0.0
+    image: ghcr.io/texlyre/peerjs-server:1.0.2
     build:
       context: ./services/peerjs-server
       args:
@@ -216,7 +216,7 @@ services:
       - "traefik.http.routers.peerjs-secure.service=peerjs"
 
   filepizza-server:
-    image: ghcr.io/texlyre/filepizza-server:1.0.0
+    image: ghcr.io/texlyre/filepizza-server:2.1.1
     build:
       context: ./services/filepizza-server
     x-publish:
