@@ -1,0 +1,5 @@
+{
+  "settings": {
+    "collab-signaling-servers": "ws://ywebrtc.${BASE_DOMAIN}:${HTTP_PORT}/"
+  }
+}
