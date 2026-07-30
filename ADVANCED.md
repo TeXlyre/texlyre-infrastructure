@@ -11,7 +11,7 @@ cp envfile.network .env
 docker compose -f docker-compose.yml -f docker-compose.custom-ports.yml up -d
 ```
 
-Traefik subdomain routing keeps working. If you also want the frontend to talk to the
+Traefik subdomain routing keeps working. If you also want the frontend to communicate with the
 directly exposed ports instead of going through Traefik, uncomment and edit
 `TEXLYRE_USERDATA` in `.env`:
 

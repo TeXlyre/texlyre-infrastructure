@@ -6,7 +6,7 @@ OVERRIDES=/etc/texlyre/overrides
 WORK=/tmp/texlyre-userdata
 SUBST='${BASE_DOMAIN} ${PRODUCTION_DOMAIN} ${HTTP_PORT} ${HTTPS_PORT}'
 
-rm -f "$ROOT/userdata.local.json" "$ROOT/userdata.local.mobile.json"
+rm -f "$ROOT/userdata.json" "$ROOT/userdata.mobile.json"
 
 VARIANT="${TEXLYRE_USERDATA_VARIANT:-}"
 INLINE="${TEXLYRE_USERDATA:-}"
@@ -85,7 +85,7 @@ build() {
 	echo "10-userdata.sh: wrote $(basename "$out") from $# layer(s)"
 }
 
-build "$ROOT/userdata.json" "" inline.json "$ROOT/userdata.local.json"
-build "$ROOT/userdata.mobile.json" ".mobile.json" inline.mobile.json "$ROOT/userdata.local.mobile.json"
+build "$ROOT/userdata.local.json" "" inline.json "$ROOT/userdata.json"
+build "$ROOT/userdata.local.mobile.json" ".mobile.json" inline.mobile.json "$ROOT/userdata.mobile.json"
 
 rm -rf "$WORK"
