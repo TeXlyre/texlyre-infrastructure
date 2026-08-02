@@ -1,0 +1,228 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="TeXlyre infrastructure" id="texlyre-infrastructure">
+    <mxGraphModel dx="1795" dy="1890" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1720" pageHeight="1060" background="#FFFFFF" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=nowrap;fontFamily=Helvetica;fontSize=48;fontColor=#172033;fontStyle=1;" value="TeXlyre infrastructure" vertex="1">
+          <mxGeometry height="66" width="900" x="410" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="browser-outer" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FBFDFF;strokeColor=#2463EB;strokeWidth=2.5;absoluteArcSize=1;arcSize=44;" value="" vertex="1">
+          <mxGeometry height="790" width="350" x="233" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="browser-title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=nowrap;fontFamily=Helvetica;fontSize=30;fontColor=#2463EB;fontStyle=1;" value="Browser" vertex="1">
+          <mxGeometry height="40" width="300" x="270" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="frontend-outer" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2463EB;strokeWidth=2.2;absoluteArcSize=1;arcSize=32;" value="" vertex="1">
+          <mxGeometry height="685" width="280" x="270" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="frontend-title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=nowrap;fontFamily=Helvetica;fontSize=26;fontColor=#2463EB;fontStyle=1;" value="TeXlyre frontend" vertex="1">
+          <mxGeometry height="38" width="240" x="290" y="199" as="geometry" />
+        </mxCell>
+        <mxCell id="frontend-sub" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=nowrap;fontFamily=Helvetica;fontSize=17;fontColor=#536078;" value="static site; no backend state" vertex="1">
+          <mxGeometry height="28" width="260" x="280" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="b-collab" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#2463EB;strokeWidth=1.5;absoluteArcSize=1;arcSize=22;" value="" vertex="1">
+          <mxGeometry height="62" width="260" x="280" y="292" as="geometry" />
+        </mxCell>
+        <mxCell id="b-collab-label" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=nowrap;fontFamily=Helvetica;fontSize=22;fontColor=#2463EB;fontStyle=1;" value="real-time collaboration" vertex="1">
+          <mxGeometry height="38" width="208" x="306" y="303" as="geometry" />
+        </mxCell>
+        <mxCell id="b-typeset" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#2463EB;strokeWidth=1.5;absoluteArcSize=1;arcSize=22;" value="" vertex="1">
+          <mxGeometry height="62" width="260" x="280" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="b-typeset-label" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=nowrap;fontFamily=Helvetica;fontSize=22;fontColor=#2463EB;fontStyle=1;" value="On-demand packages" vertex="1">
+          <mxGeometry height="38" width="208" x="306" y="441" as="geometry" />
+        </mxCell>
+        <mxCell id="b-recipes" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#2463EB;strokeWidth=1.5;absoluteArcSize=1;arcSize=22;" value="" vertex="1">
+          <mxGeometry height="62" width="260" x="280" y="568" as="geometry" />
+        </mxCell>
+        <mxCell id="b-recipes-label" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=nowrap;fontFamily=Helvetica;fontSize=22;fontColor=#2463EB;fontStyle=1;" value="recipe services" vertex="1">
+          <mxGeometry height="38" width="208" x="306" y="579" as="geometry" />
+        </mxCell>
+        <mxCell id="b-files" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#2463EB;strokeWidth=1.5;absoluteArcSize=1;arcSize=22;" value="" vertex="1">
+          <mxGeometry height="62" width="260" x="280" y="706" as="geometry" />
+        </mxCell>
+        <mxCell id="b-files-label" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=nowrap;fontFamily=Helvetica;fontSize=22;fontColor=#2463EB;fontStyle=1;" value="file synchronization" vertex="1">
+          <mxGeometry height="38" width="208" x="306" y="717" as="geometry" />
+        </mxCell>
+        <mxCell id="services-outer" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7E8;strokeColor=#C56A18;strokeWidth=2.5;absoluteArcSize=1;arcSize=44;" value="" vertex="1">
+          <mxGeometry height="790" width="1060" x="610" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="services-title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=nowrap;fontFamily=Helvetica;fontSize=30;fontColor=#C56A18;fontStyle=1;" value="Self-hosted services" vertex="1">
+          <mxGeometry height="40" width="520" x="650" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="services-sub" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=nowrap;fontFamily=Helvetica;fontSize=23;fontColor=#536078;" value="Deployed and operated by whoever hosts TeXlyre" vertex="1">
+          <mxGeometry height="28" width="720" x="650" y="171" as="geometry" />
+        </mxCell>
+        <mxCell id="collab-section" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFDF6;strokeColor=#C56A18;strokeWidth=1.6;absoluteArcSize=1;arcSize=32;" value="" vertex="1">
+          <mxGeometry height="132" width="990" x="645" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="collab-section-title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=nowrap;fontFamily=Helvetica;fontSize=26;fontColor=#C56A18;fontStyle=1;" value="Collaboration" vertex="1">
+          <mxGeometry height="30" width="350" x="670" y="224" as="geometry" />
+        </mxCell>
+        <mxCell id="ywebrtc" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7E8;strokeColor=#C56A18;strokeWidth=1.8;absoluteArcSize=1;arcSize=26;fontSize=22;" value="&lt;div style=&quot;font-family: Helvetica; line-height: 1.35; text-align: center;&quot;&gt;&lt;b&gt;Y-WebRTC signaling&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;color: rgb(83, 96, 120);&quot;&gt;room signaling only&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="70" width="390" x="670" y="257" as="geometry" />
+        </mxCell>
+        <mxCell id="yjs-description" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontFamily=Helvetica;fontSize=20;fontColor=#536078;" value="Yjs rooms for editing, cursors and file sync using&amp;nbsp;&lt;div&gt;simple peer&lt;/div&gt;" vertex="1">
+          <mxGeometry height="48" width="455" x="1119" y="268" as="geometry" />
+        </mxCell>
+        <mxCell id="typeset-section" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFDF6;strokeColor=#C56A18;strokeWidth=1.6;absoluteArcSize=1;arcSize=32;" value="" vertex="1">
+          <mxGeometry height="168" width="990" x="645" y="365" as="geometry" />
+        </mxCell>
+        <mxCell id="typeset-section-title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=nowrap;fontFamily=Helvetica;fontSize=26;fontColor=#C56A18;fontStyle=1;" value="Typesetting support" vertex="1">
+          <mxGeometry height="30" width="400" x="670" y="374" as="geometry" />
+        </mxCell>
+        <mxCell id="texlive" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7E8;strokeColor=#C56A18;strokeWidth=1.8;absoluteArcSize=1;arcSize=26;fontSize=22;" value="&lt;div style=&quot;font-family: Helvetica; line-height: 1.35; text-align: center;&quot;&gt;&lt;b&gt;TeXlive package server&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;color: rgb(83, 96, 120);&quot;&gt;TeX Live 2020 / SwiftLaTeX packages&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="96" width="425" x="670" y="411" as="geometry" />
+        </mxCell>
+        <mxCell id="texlive2026" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7E8;strokeColor=#C56A18;strokeWidth=1.8;absoluteArcSize=1;arcSize=26;fontSize=22;" value="&lt;div style=&quot;font-family: Helvetica; line-height: 1.35; text-align: center;&quot;&gt;&lt;b&gt;TeXlive2026 package server&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;color: rgb(83, 96, 120);&quot;&gt;TeX Live 2026 / BusyTeX packages&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="96" width="425" x="1150" y="411" as="geometry" />
+        </mxCell>
+        <mxCell id="recipes-section" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFDF6;strokeColor=#C56A18;strokeWidth=1.6;absoluteArcSize=1;arcSize=32;" value="" vertex="1">
+          <mxGeometry height="132" width="990" x="645" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="recipes-section-title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=nowrap;fontFamily=Helvetica;fontSize=26;fontColor=#C56A18;fontStyle=1;" value="Recipes (optional)" vertex="1">
+          <mxGeometry height="30" width="400" x="670" y="559" as="geometry" />
+        </mxCell>
+        <mxCell id="recipes" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7E8;strokeColor=#C56A18;strokeWidth=1.8;absoluteArcSize=1;arcSize=26;fontSize=22;" value="&lt;div style=&quot;font-family: Helvetica; line-height: 1.35; text-align: center;&quot;&gt;&lt;b&gt;Chelys recipe containers&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;color: rgb(83, 96, 120);&quot;&gt;independent typesetters and LSPs: SILE, Typst, ConTeXt, tinymist, ltex-ls-plus, etc.&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="65" width="905" x="670" y="595" as="geometry" />
+        </mxCell>
+        <mxCell id="file-section" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFDF6;strokeColor=#C56A18;strokeWidth=1.6;absoluteArcSize=1;arcSize=32;" value="" vertex="1">
+          <mxGeometry height="185" width="650" x="645" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="file-section-title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=nowrap;fontFamily=Helvetica;fontSize=26;fontColor=#C56A18;fontStyle=1;" value="File sharing" vertex="1">
+          <mxGeometry height="30" width="300" x="670" y="709" as="geometry" />
+        </mxCell>
+        <mxCell id="3Da290c1Hu4RITwRYH9t-1" edge="1" parent="1" source="filepizza" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;strokeColor=#C56A18;strokeWidth=3;dashed=1;dashPattern=8 8;" target="peerjs-public">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="955" y="805" />
+              <mxPoint x="955" y="862.5" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="filepizza" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7E8;strokeColor=#C56A18;strokeWidth=1.8;absoluteArcSize=1;arcSize=26;fontSize=22;" value="&lt;div style=&quot;font-family: Helvetica; line-height: 1.35; text-align: center;&quot;&gt;&lt;b&gt;FilePizza server&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;color: rgb(83, 96, 120);&quot;&gt;brokers transfer rooms&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="72" width="270" x="670" y="751" as="geometry" />
+        </mxCell>
+        <mxCell id="peerjs" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7E8;strokeColor=#C56A18;strokeWidth=1.8;absoluteArcSize=1;arcSize=26;fontSize=22;" value="&lt;div style=&quot;font-family: Helvetica; line-height: 1.35; text-align: center;&quot;&gt;&lt;b&gt;PeerJS signaling&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;color: rgb(83, 96, 120);&quot;&gt;self-hosted peer discovery&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="72" width="280" x="985" y="751" as="geometry" />
+        </mxCell>
+        <mxCell id="peerjs-public" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEFFFE;strokeColor=#C56A18;strokeWidth=1.8;absoluteArcSize=1;arcSize=22;dashed=1;dashPattern=8 6;fontFamily=Helvetica;fontSize=22;fontColor=#C56A18;fontStyle=1;align=center;verticalAlign=middle;" value="PeerJS signaling (public)" vertex="1">
+          <mxGeometry height="38" width="280" x="985" y="834" as="geometry" />
+        </mxCell>
+        <mxCell id="p2p-label" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=nowrap;fontFamily=Helvetica;fontSize=20;fontColor=#536078;" value="Peer-to-peer file sharing" vertex="1">
+          <mxGeometry height="38" width="255" x="684" y="832" as="geometry" />
+        </mxCell>
+        <mxCell id="state-section" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFDF6;strokeColor=#C56A18;strokeWidth=1.6;absoluteArcSize=1;arcSize=32;" value="" vertex="1">
+          <mxGeometry height="185" width="315" x="1320" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="state-section-title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=nowrap;fontFamily=Helvetica;fontSize=22;fontColor=#C56A18;fontStyle=1;" value="Shared state" vertex="1">
+          <mxGeometry height="30" width="260" x="1342" y="709" as="geometry" />
+        </mxCell>
+        <mxCell id="redis" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7E8;strokeColor=#C56A18;strokeWidth=1.8;absoluteArcSize=1;arcSize=26;fontSize=22;" value="&lt;div style=&quot;font-family: Helvetica; line-height: 1.35; text-align: center;&quot;&gt;&lt;b&gt;Redis cache&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;color: rgb(83, 96, 120);&quot;&gt;used by both TeX Live package servers and FilePizza&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="121" width="265" x="1345" y="751" as="geometry" />
+        </mxCell>
+        <mxCell id="e-collab" edge="1" parent="1" source="b-collab" style="endArrow=classic;endFill=1;html=1;rounded=0;strokeColor=#2463EB;strokeWidth=4;exitX=1;exitY=0.5;exitDx=0;exitDy=0;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="336" y="323" as="sourcePoint" />
+            <mxPoint x="645" y="323" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-typeset" edge="1" parent="1" source="b-typeset" style="endArrow=classic;endFill=1;html=1;rounded=0;strokeColor=#2463EB;strokeWidth=4;exitX=1;exitY=0.5;exitDx=0;exitDy=0;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="336" y="461" as="sourcePoint" />
+            <mxPoint x="645" y="461" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-recipes" edge="1" parent="1" source="b-recipes" style="endArrow=classic;endFill=1;html=1;rounded=0;strokeColor=#2463EB;strokeWidth=4;exitX=1;exitY=0.5;exitDx=0;exitDy=0;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="336" y="599" as="sourcePoint" />
+            <mxPoint x="645" y="599" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-files" edge="1" parent="1" source="b-files" style="endArrow=classic;endFill=1;html=1;rounded=0;strokeColor=#2463EB;strokeWidth=4;exitX=1;exitY=0.5;exitDx=0;exitDy=0;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="336" y="737" as="sourcePoint" />
+            <mxPoint x="645" y="737" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-file-peer" edge="1" parent="1" style="endArrow=classic;endFill=1;html=1;rounded=0;strokeColor=#C56A18;strokeWidth=3;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="940" y="787" as="sourcePoint" />
+            <mxPoint x="985" y="787" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="t48" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=nowrap;fontFamily=Helvetica;fontSize=20;fontColor=#172033;" value="creates rooms" vertex="1">
+          <mxGeometry height="24" width="110" x="974" y="718" as="geometry" />
+        </mxCell>
+        <mxCell id="e-texlive-redis" edge="1" parent="1" style="endArrow=classic;endFill=1;html=1;rounded=0;strokeColor=#C56A18;strokeWidth=3;edgeStyle=orthogonalEdgeStyle;dashed=1;dashPattern=12 12;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="882" y="518.25" />
+              <mxPoint x="1645" y="518.25" />
+              <mxPoint x="1645" y="780" />
+            </Array>
+            <mxPoint x="882" y="507" as="sourcePoint" />
+            <mxPoint x="1610" y="780" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-texlive2026-redis" edge="1" parent="1" style="endArrow=classic;endFill=1;html=1;rounded=0;strokeColor=#C56A18;strokeWidth=3;edgeStyle=orthogonalEdgeStyle;dashed=1;dashPattern=12 12;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1658" y="459" />
+              <mxPoint x="1658" y="830" />
+            </Array>
+            <mxPoint x="1575" y="459" as="sourcePoint" />
+            <mxPoint x="1610" y="830" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-file-redis" edge="1" parent="1" style="endArrow=classic;endFill=1;html=1;rounded=0;strokeColor=#C56A18;strokeWidth=3;edgeStyle=orthogonalEdgeStyle;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="955" y="770" />
+              <mxPoint x="955" y="715.75" />
+              <mxPoint x="1307" y="715.75" />
+              <mxPoint x="1307" y="795" />
+            </Array>
+            <mxPoint x="940" y="770" as="sourcePoint" />
+            <mxPoint x="1345" y="795" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#B7C1CF;strokeWidth=1.6;absoluteArcSize=1;arcSize=28;" value="" vertex="1">
+          <mxGeometry height="88" width="1437" x="233" y="929" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=nowrap;fontFamily=Helvetica;fontSize=22;fontColor=#172033;fontStyle=1;" value="Legend:" vertex="1">
+          <mxGeometry height="34" width="120" x="253" y="954" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-blue" edge="1" parent="1" style="endArrow=classic;endFill=1;html=1;rounded=0;strokeColor=#2463EB;strokeWidth=4;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="488" y="972" as="sourcePoint" />
+            <mxPoint x="563" y="972" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend-blue-text" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=nowrap;fontFamily=Helvetica;fontSize=17;fontColor=#172033;" value="browser calls a service" vertex="1">
+          <mxGeometry height="36" width="270" x="578" y="953" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-orange" edge="1" parent="1" style="endArrow=classic;endFill=1;html=1;rounded=0;strokeColor=#C56A18;strokeWidth=3;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="868" y="972" as="sourcePoint" />
+            <mxPoint x="943" y="972" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend-orange-text" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=nowrap;fontFamily=Helvetica;fontSize=17;fontColor=#172033;" value="service depends on a service" vertex="1">
+          <mxGeometry height="36" width="330" x="958" y="953" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-dashed" edge="1" parent="1" style="endArrow=classic;endFill=1;html=1;rounded=0;strokeColor=#C56A18;strokeWidth=3;dashed=1;dashPattern=8 6;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1318" y="972" as="sourcePoint" />
+            <mxPoint x="1393" y="972" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend-dashed-text" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=nowrap;fontFamily=Helvetica;fontSize=17;fontColor=#172033;" value="optional alternative" vertex="1">
+          <mxGeometry height="36" width="260" x="1408" y="953" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
