@@ -20,12 +20,16 @@ permissions:
   packages: write
 
 jobs:
-  matrix:
+  plan:
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.generate.outputs.matrix }}
+      builds: ${{ steps.expand.outputs.builds }}
+      images: ${{ steps.expand.outputs.images }}
+      count: ${{ steps.expand.outputs.count }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - uses: actions/setup-node@v4
         with:
@@ -33,21 +37,72 @@ jobs:
 
       - run: npm install --no-save js-yaml
 
-      - id: generate
-        run: node scripts/publish-matrix.cjs docker-compose.yml >> "$GITHUB_OUTPUT"
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-  publish:
-    runs-on: ubuntu-latest
-    needs: matrix
-    env:
-      DISPATCH_TOKEN: ${{ secrets.RECIPES_DISPATCH_TOKEN }}
+      - run: node scripts/publish-matrix.cjs docker-compose.yml > matrix.env
+
+      - id: expand
+        env:
+          FORCE: ${{ github.event.inputs.force }}
+          FALLBACK_URL: ${{ github.server_url }}/${{ github.repository }}
+        run: |
+          set -euo pipefail
+          sed -n 's/^matrix=//p' matrix.env > matrix.json
+
+          entries='[]'
+          while read -r row; do
+            entry=$(printf '%s' "$row" | base64 -d)
+            image=$(printf '%s' "$entry" | jq -r '.image')
+            source=$(printf '%s' "$entry" | jq -r '.source')
+
+            if [ "$FORCE" != "true" ] && docker manifest inspect "$image" >/dev/null 2>&1; then
+              echo "Skipped \`$image\`, tag already published. Bump it in docker-compose.yml to release a new build." \
+                >> "$GITHUB_STEP_SUMMARY"
+              continue
+            fi
+
+            sha=$(git -C "$source" rev-parse HEAD 2>/dev/null || echo unknown)
+            url=$(git -C "$source" remote get-url origin 2>/dev/null || echo "$FALLBACK_URL")
+
+            entry=$(printf '%s' "$entry" | jq -c \
+              --arg sha "$sha" --arg url "${url%.git}" --arg repo "${image%:*}" \
+              '. + {sha: $sha, url: $url, repo: $repo}')
+            entries=$(printf '%s' "$entries" | jq -c --argjson e "$entry" '. + [$e]')
+          done < <(jq -r '.include[] | @base64' matrix.json)
+
+          builds=$(printf '%s' "$entries" | jq -c '
+            map(. as $e
+              | ($e.platforms | split(",") | map(gsub("^\\s+|\\s+$"; "")))
+              | map($e + {
+                  platform: .,
+                  slug: gsub("/"; "-"),
+                  runner: (if test("arm64") then "ubuntu-24.04-arm" else "ubuntu-24.04" end)
+                }))
+            | flatten | {include: .}')
+
+          {
+            echo "builds=$builds"
+            echo "images=$(printf '%s' "$entries" | jq -c '{include: .}')"
+            echo "count=$(printf '%s' "$entries" | jq 'length')"
+          } >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: plan
+    if: needs.plan.outputs.count != '0'
+    runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.matrix.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.plan.outputs.builds) }}
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+
+      - uses: docker/setup-buildx-action@v3
 
       - uses: docker/login-action@v3
         with:
@@ -55,58 +110,81 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - id: decide
-        run: |
-          if docker manifest inspect "${{ matrix.image }}" > /dev/null 2>&1 \
-            && [ "${{ github.event.inputs.force }}" != "true" ]; then
-            echo "build=false" >> "$GITHUB_OUTPUT"
-            echo "Skipped \`${{ matrix.image }}\`, tag already published. Bump it in docker-compose.yml to release a new build." \
-              >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "build=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - id: revision
-        if: steps.decide.outputs.build == 'true'
-        run: |
-          sha=$(git -C "${{ matrix.source }}" rev-parse HEAD 2>/dev/null || echo unknown)
-          url=$(git -C "${{ matrix.source }}" remote get-url origin 2>/dev/null \
-            || echo "${{ github.server_url }}/${{ github.repository }}")
-          echo "sha=$sha" >> "$GITHUB_OUTPUT"
-          echo "url=${url%.git}" >> "$GITHUB_OUTPUT"
-
-      - uses: docker/setup-qemu-action@v3
-        if: steps.decide.outputs.build == 'true' && contains(matrix.platforms, 'arm64')
-
-      - uses: docker/setup-buildx-action@v3
-        if: steps.decide.outputs.build == 'true'
-
       - id: push
-        if: steps.decide.outputs.build == 'true'
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.dockerfile }}
           build-args: ${{ matrix.args }}
-          platforms: ${{ matrix.platforms }}
-          push: true
+          platforms: ${{ matrix.platform }}
           provenance: false
-          tags: ${{ matrix.image }}
-          cache-from: type=gha,scope=${{ matrix.name }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+          outputs: type=image,name=${{ matrix.repo }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=${{ matrix.name }}-${{ matrix.slug }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}-${{ matrix.slug }}
           labels: |
             org.opencontainers.image.title=${{ matrix.name }}
-            org.opencontainers.image.source=${{ steps.revision.outputs.url }}
-            org.opencontainers.image.revision=${{ steps.revision.outputs.sha }}
+            org.opencontainers.image.source=${{ matrix.url }}
+            org.opencontainers.image.revision=${{ matrix.sha }}
 
-      - if: steps.push.outcome == 'success'
+      - run: |
+          mkdir -p /tmp/digests
+          digest='${{ steps.push.outputs.digest }}'
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.name }}--${{ matrix.slug }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    needs: [plan, build]
+    if: needs.plan.outputs.count != '0'
+    runs-on: ubuntu-latest
+    env:
+      DISPATCH_TOKEN: ${{ secrets.RECIPES_DISPATCH_TOKEN }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.plan.outputs.images) }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digests-${{ matrix.name }}--*
+          merge-multiple: true
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: manifest
+        working-directory: /tmp/digests
+        env:
+          IMAGE: ${{ matrix.image }}
+          REPO: ${{ matrix.repo }}
         run: |
-          echo "Published \`${{ matrix.image }}\` from ${{ steps.revision.outputs.sha }}" >> "$GITHUB_STEP_SUMMARY"
+          set -euo pipefail
+          docker buildx imagetools create \
+            --annotation "index:org.opencontainers.image.title=${{ matrix.name }}" \
+            --annotation "index:org.opencontainers.image.source=${{ matrix.url }}" \
+            --annotation "index:org.opencontainers.image.revision=${{ matrix.sha }}" \
+            -t "$IMAGE" \
+            $(printf "$REPO@sha256:%s " *)
 
-      - if: steps.push.outcome == 'success' && env.DISPATCH_TOKEN != ''
+      - if: steps.manifest.outcome == 'success'
+        run: |
+          echo "Published \`${{ matrix.image }}\` from ${{ matrix.sha }}" >> "$GITHUB_STEP_SUMMARY"
+
+      - if: steps.manifest.outcome == 'success' && env.DISPATCH_TOKEN != ''
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.RECIPES_DISPATCH_TOKEN }}
           repository: TeXlyre/chelys-recipes
           event-type: image-published
           client-payload: '{"recipe": "${{ matrix.name }}", "image": "${{ matrix.image }}"}'
+          

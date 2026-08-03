@@ -1,94 +1,214 @@
 # texlyre-infrastructure
 
-An omni-repo for deploying all TeXlyre servers locally
+An omni-repo for deploying TeXlyre and its supporting services.
 
-![TeXlyre Infrastructure Diagram](./showcase/infrastructure.png)
+![TeXlyre Infrastructure Diagram](./showcase/texlyre-infrastructure.svg)
 
 ## Quick Start
 
-Copy `envfile.local` to `.env`. That file is gitignored, so your local settings stay out of the repo:
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Copy the `envfile.local` to `.env`:
 
 ```bash
 cp envfile.local .env
 ```
 
-Create your local environment file and deploy:
+3. **[OPTIONAL]** Modify the `RECIPES` in the `.env` file to include any optional Chelys recipes (run `npm run recipes:list-verbose` to view available recipes along with the provided options) e.g., add the SILE typesetter and ltex-ls-plus (grammartools) with:
 
 ```bash
-git submodule deinit --all -f
-git submodule update --init --recursive --remote
+RECIPES=sile,ltex-ls-plus?language=en-GB
+```
+
+4. Pull the pre-built images (TeXlyre services and Chelys recipes) and deploy all:
+
+```bash
+npm run recipes
+npm run up:recipes
+```
+
+5. TeXlyre is available at `http://localhost:8082/texlyre/` with SILE as a typesetter alongside the WASM Typst and LaTeX, and grammar correction hints on opening `tex`, `bib`, `typst`, `md` and text files.
+
+
+## Build from Source 
+
+Clone with submodules so each buildable service is checked out at its pinned release:
+
+```bash
+git clone --recurse-submodules https://github.com/TeXlyre/texlyre-infrastructure.git
+cd texlyre-infrastructure
+```
+
+For an existing clone:
+
+```bash
+git submodule update --init --recursive
+```
+
+Copy the local environment template. `.env` is gitignored, so deployment-specific
+settings remain local:
+
+```bash
+cp envfile.local .env
+```
+
+Deploy the complete stack:
+
+```bash
 docker compose up -d --build
 ```
 
-You can now access TeXlyre on http://localhost:8082/texlyre/
+TeXlyre is then available at http://localhost:8082/texlyre/.
 
-Each service declares both a `build:` context and a published `image:` tag, so `--build`
-compiles from the submodule sources and tags the result under that name locally.
-
-You can also skip the build entirely:
+Each buildable service declares both a `build:` context and a published `image:` tag.
+Use `--build` to compile from the pinned submodules, or pull the published images:
 
 ```bash
 docker compose pull
 docker compose up -d
 ```
 
+The npm wrappers use `--remove-orphans`, which also removes services that were disabled
+since the previous start:
+
+```bash
+npm install
+npm start
+npm run logs
+npm run down
+```
+
+## Built-in Services
+
+`SERVICES` controls the built-in Compose services. The supplied environment files use
+`SERVICES=all`, so every service is enabled by default. Set it to `none` or a
+comma-separated subset of:
+
+```env
+SERVICES=frontend,portainer,filepizza,ywebrtc,peerjs,texlive,texlive2026,redis
+COMPOSE_PROFILES=${SERVICES:-all}
+```
+
+For example, this keeps the frontend, collaboration, file transfer, and original TeX Live
+server while disabling Portainer and TeX Live 2026:
+
+```env
+SERVICES=frontend,filepizza,ywebrtc,peerjs,texlive
+```
+
+Traefik remains the routing core. Redis is activated automatically when `filepizza` or
+`texlive2026` is selected, and can also be selected directly.
+
+Frontend endpoint overrides are service-scoped. If a service is absent from `SERVICES`,
+its corresponding setting is not added to TeXlyre userdata; the image's own default for
+that setting remains untouched.
+
+## Chelys Recipes
+
+Set `RECIPES` to add selected Chelys recipe services alongside the built-in stack:
+
+```env
+RECIPES=sile,ltex-ls-plus?language=en-GB
+```
+
+Then generate and start the recipe Compose file:
+
+```bash
+npm run recipes
+npm run up:recipes
+```
+
+Use `npm run recipes:list` to list available recipe IDs. Generated recipe services and
+their TeXlyre userdata are removed when `RECIPES` is empty and `npm run recipes` is run.
+
 ## Frontend Configuration
 
-The frontend image is loaded TeXlyre's own defaults and reads a deployment override at
-container start. `TEXLYRE_USERDATA_VARIANT` in `.env` selects a file from
-`frontend/userdata.overrides/`, which is deep-merged onto those defaults and written
-to `userdata.local.json` inside the container.
+The frontend image contains TeXlyre's own defaults. At container start,
+`TEXLYRE_USERDATA_VARIANT` selects a deployment layer from
+`frontend/userdata.overrides/`; enabled services add their own endpoint layers, generated
+recipes add their configuration layer, and inline userdata is merged last.
 
-Each override holds only the keys a deployment changes, so it never falls out of date
-with TeXlyre's own settings. `${BASE_DOMAIN}`, `${PRODUCTION_DOMAIN}`, `${HTTP_PORT}`
-and `${HTTPS_PORT}` are substituted from `.env`.
+Each layer contains only the keys it changes, so unrelated TeXlyre settings continue to
+come from the frontend image. `${BASE_DOMAIN}`, `${PRODUCTION_DOMAIN}`, `${HTTP_PORT}` and
+`${HTTPS_PORT}` are substituted from `.env`.
 
-To change any other setting without adding a file, set `TEXLYRE_USERDATA` in `.env` to
-a JSON object:
+Set `TEXLYRE_USERDATA` to override any additional setting without adding a file:
 
 ```env
 TEXLYRE_USERDATA={"settings":{"theme-variant":"atom_light","editor-font-size":"md"}}
 ```
 
-See [frontend/userdata.overrides/README.md](frontend/userdata.overrides/README.md) for details.
+See [frontend/userdata.overrides/README.md](frontend/userdata.overrides/README.md) for the
+merge order and file naming.
 
 ## Service Access
 
-All services are accessible at http://localhost:8082 with subdomain routing:
+With `SERVICES=all`, the local stack is available through Traefik on port 8082.
 
 ### Management
+
 * **Traefik Dashboard**: http://traefik.localhost:8082
 * **Portainer**: http://portainer.localhost:8082
 
 ### Applications
+
 * **TeXlyre Frontend**: http://localhost:8082/texlyre/
 * **FilePizza**: http://filepizza.localhost:8082
 * **Y-WebRTC**: http://ywebrtc.localhost:8082
 * **PeerJS**: http://peerjs.localhost:8082
-* **TeXlive**: http://texlive.localhost:8082
-* **TeXLive 2026**: http://texlive2026.localhost:8082 (`--profile texlive2026`)
+* **TeX Live**: http://texlive.localhost:8082
+* **TeX Live 2026**: http://texlive2026.localhost:8082
 
-## TeXLive 2026 Server
+Only selected services are started and advertised to TeXlyre.
 
-`texlive2026-server` serves TeX Live 2026 files on demand for busytex. It is opt-in
-because its texmf-dist tree is a large one-time download rather than part of an image:
+## TeX Live 2026 Server
 
-```bash
-docker compose --profile texlive2026 up -d
+`texlive2026-server` serves TeX Live 2026 files on demand for BusyTeX. It is enabled by
+default with the other built-in services. Its `texmf-dist` tree is fetched into the
+`texmf` named volume on first start and reused afterwards.
+
+`TEXMF_URL` in `.env` points at the published tree. Set `TEXMF_ROOT` to an absolute path
+instead to mount an existing tree and skip the download. Remove `texlive2026` from
+`SERVICES` to disable both the server and its initializer without adding the BusyTeX
+endpoint to frontend userdata. See [ADVANCED.md](ADVANCED.md) for storage details.
+
+## Submodule Versions
+
+`.gitmodules` declares the release each service is pinned to:
+
+```properties
+[submodule "services/y-webrtc-server"]
+	path = services/y-webrtc-server
+	url = https://github.com/TeXlyre/y-webrtc-server.git
+	tag = v10.3.0
 ```
 
-`TEXMF_URL` in `.env` already points at the published tree, which is fetched into a
-named volume on first start and reused afterwards. Set `TEXMF_ROOT` to an absolute path
-instead if you have a tree on disk already. See [ADVANCED.md](ADVANCED.md) for details.
+To change a version, edit its `tag` entry and run:
+
+```bash
+npm run sync
+```
+
+This checks out each declared tag, stages the resulting submodule commit, and rewrites the
+matching `image:` tags in `docker-compose.yml`. `npm run sync:check` reports drift without
+changing files.
+
+For consumers, `git submodule update --init --recursive` restores the commits recorded by
+the repository. `--remote` is intentionally not used because it follows branch tips rather
+than the pinned releases.
 
 ## Publishing Images
 
-`docker-compose.yml` is the single source of truth for versions. Every buildable
-service carries a literal `image:` tag and an `x-publish:` block:
+`docker-compose.yml` is the source of truth for image versions. Every buildable service
+has a literal `image:` tag and an `x-publish:` block:
 
 ```yaml
   y-webrtc-server:
-    image: ghcr.io/texlyre/y-webrtc-server:1.0.0
+    image: ghcr.io/texlyre/y-webrtc-server:10.3.0
     build:
       context: ./services/y-webrtc-server
     x-publish:
@@ -97,45 +217,34 @@ service carries a literal `image:` tag and an `x-publish:` block:
         - linux/arm64
 ```
 
-On push to `main`, `.github/workflows/publish-images.yml` turns those blocks into a
-build matrix and pushes each image to GHCR, labelled with the submodule's origin URL
-and commit. A tag that already exists is skipped, so releasing a new build means
-bumping the tag in `docker-compose.yml`. Use the workflow's `force` input to
-deliberately overwrite.
-
-Renovate watches the submodules and opens a PR when a tracked branch moves. Bump the
-matching image tag in that PR.
+On push to `main`, `.github/workflows/publish-images.yml` builds the declared platforms,
+pushes them by digest, and assembles the final GHCR manifest. Existing tags are skipped
+unless the workflow is run manually with `force`.
 
 ## Management Commands
 
-Update submodules to latest version:
 ```bash
-git submodule update --remote --merge
+npm run submodules:status
+npm run pull
+npm run ps
+npm run logs
+npm run restart
+npm run down
+npm run down:volumes
 ```
 
-Pull newly published images:
-```bash
-docker compose pull
-```
-
-Before the first publish, restrict that to the third-party images so the not-yet-pushed
-tags do not error:
-```bash
-docker compose pull --ignore-buildable
-```
-
-Stop containers:
-```bash
-docker compose down
-```
+`npm run down` enables every profile for the removal command, so it also removes services
+that are no longer listed in the current `SERVICES` selection.
 
 ## Advanced Configuration
 
-For network hosting, production deployment, custom ports, and SSL setup, see [ADVANCED.md](ADVANCED.md).
+For network hosting, production deployment, custom ports, TeX Live storage, recipe
+registry overrides, and image publishing details, see [ADVANCED.md](ADVANCED.md).
 
 ## Container Names
 
-Services are deployed with the following container names:
+Depending on `SERVICES`, the deployment uses these container names:
+
 * `${COMPOSE_PROJECT_NAME}-traefik`
 * `${COMPOSE_PROJECT_NAME}-portainer`
 * `${COMPOSE_PROJECT_NAME}-frontend`
@@ -143,5 +252,6 @@ Services are deployed with the following container names:
 * `${COMPOSE_PROJECT_NAME}-ywebrtc`
 * `${COMPOSE_PROJECT_NAME}-peerjs`
 * `${COMPOSE_PROJECT_NAME}-texlive`
+* `${COMPOSE_PROJECT_NAME}-texlive2026-texmf`
 * `${COMPOSE_PROJECT_NAME}-texlive2026`
 * `${COMPOSE_PROJECT_NAME}-redis`

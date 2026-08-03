@@ -15,6 +15,10 @@ services:
     ports:
       - "${BIND_IP:-127.0.0.1}:${HTTP_PORT_FILEPIZZA}:8080"
 
+  repository-proxy-server:
+    ports:
+      - "${BIND_IP:-127.0.0.1}:${HTTP_PORT_PROXY}:8080"
+
   peerjs-server:
     ports:
       - "${BIND_IP:-127.0.0.1}:${HTTP_PORT_PEERJS}:9000"

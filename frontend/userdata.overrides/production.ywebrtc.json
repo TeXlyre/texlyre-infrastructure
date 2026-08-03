@@ -1,0 +1,5 @@
+{
+  "settings": {
+    "collab-signaling-servers": "wss://ywebrtc.${PRODUCTION_DOMAIN}"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "settings": {
+    "latex-texlive-endpoint": "https://texlive.${PRODUCTION_DOMAIN}"
+  }
+}

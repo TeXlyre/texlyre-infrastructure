@@ -6,6 +6,8 @@ frontend/texlyre/dist/
 frontend/userdata.json
 frontend/userdata.mobile.json
 frontend/texmf/
+frontend/userdata.overrides/recipes.json
+docker-compose.recipes.yml
 services/*/node_modules/
 services/*/dist/
 services/*/.env

@@ -1,12 +1,21 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
-  "enabledManagers": ["git-submodules"],
-  "git-submodules": {
-    "enabled": true
-  },
-  "commitMessagePrefix": "submodule:",
-  "prBodyNotes": [
-    "Bump the matching `image:` tag in `docker-compose.yml` in this PR so `Publish Images` releases the new build."
-  ]
+	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+	"extends": ["config:recommended"],
+	"enabledManagers": ["custom.regex"],
+	"commitMessagePrefix": "submodule:",
+	"customManagers": [
+		{
+			"customType": "regex",
+			"managerFilePatterns": ["/^\\.gitmodules$/"],
+			"matchStrings": [
+				"url\\s*=\\s*https://github\\.com/(?<depName>[^\\s]+?)(?:\\.git)?\\s*\\n\\s*tag\\s*=\\s*(?<currentValue>\\S+)"
+			],
+			"datasourceTemplate": "github-tags",
+			"versioningTemplate": "semver-coerced"
+		}
+	],
+	"prBodyNotes": [
+		"Run `npm run sync` on this branch and commit the result. It moves the submodule to the new tag and rewrites the matching `image:` tag in `docker-compose.yml`.",
+		"CI fails until then, because `npm run lint` includes `sync:check`."
+	]
 }

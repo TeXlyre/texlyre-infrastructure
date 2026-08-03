@@ -1,27 +1,63 @@
 # Advanced Configuration
 
+## Service Selection
+
+The supplied environment files derive Docker Compose profiles from `SERVICES`:
+
+```env
+SERVICES=all
+COMPOSE_PROFILES=${SERVICES:-all}
+```
+
+`all` starts every built-in service. `none` starts only the unprofiled Traefik routing
+core. A custom selection is a comma-separated combination of:
+
+```text
+frontend, portainer, filepizza, ywebrtc, peerjs, texlive, texlive2026, proxy, redis
+```
+
+Redis also carries the `filepizza` and `texlive2026` profiles, so either service activates
+its shared Redis dependency even when `redis` is not written explicitly.
+
+The frontend receives the same `SERVICES` value. Its entrypoint applies only the
+`<variant>.<service>.json` endpoint layers belonging to selected services. Removing a
+service therefore stops the container and leaves the corresponding TeXlyre userdata key
+untouched after the frontend is recreated.
+
+Use the npm `up` wrappers, or add `--remove-orphans` to a direct `docker compose up`, when
+changing the selection so containers from the previous profile set are removed:
+
+```bash
+npm run up
+# or
+docker compose up -d --remove-orphans
+```
+
+`npm run down` activates every profile for removal, regardless of the current selection.
+
 ## Network Hosting
 
-For hosting on your local network or internet, use the network configuration and point
-the frontend at your network addresses:
+For hosting on a local network or the internet, use the network configuration and point
+`PRODUCTION_DOMAIN` at the server address:
 
 ```bash
 cp envfile.network .env
-# Edit .env and set PRODUCTION_DOMAIN to your server IP
-docker compose -f docker-compose.yml -f docker-compose.custom-ports.yml up -d
+# Edit .env and replace [YOUR_IP]
+docker compose -f docker-compose.yml -f docker-compose.custom-ports.yml up -d --remove-orphans
 ```
 
-Traefik subdomain routing keeps working. If you also want the frontend to communicate with the
-directly exposed ports instead of going through Traefik, uncomment and edit
-`TEXLYRE_USERDATA` in `.env`:
+Traefik subdomain routing remains available. To make the frontend use the directly exposed
+ports instead, uncomment `TEXLYRE_USERDATA` and include only endpoints for services that
+are selected in `SERVICES`:
 
 ```env
 TEXLYRE_USERDATA={"settings":{"collab-signaling-servers":"ws://[YOUR_IP]:8085/","file-sync-server-url":"http://[YOUR_IP]:8083","latex-texlive-endpoint":"http://[YOUR_IP]:8084","latex-busytex-endpoint":"http://[YOUR_IP]:8087"}}
 ```
 
-That layer is merged last, so it overrides whatever `TEXLYRE_USERDATA_VARIANT` set.
+The inline layer is merged last and therefore overrides the selected deployment and
+service layers.
 
-### Required Environment Variables
+### Direct Port Variables
 
 ```env
 BIND_IP=0.0.0.0
@@ -34,140 +70,198 @@ HTTP_PORT_TEXLIVE2026=8087
 
 ### Network Access URLs
 
-**Direct Service Access:**
+The following URLs exist only for selected services.
+
+**Direct service access:**
+
 * **FilePizza**: http://[YOUR_IP]:8083
+* **TeX Live**: http://[YOUR_IP]:8084
 * **Y-WebRTC**: http://[YOUR_IP]:8085
 * **PeerJS**: http://[YOUR_IP]:8086
-* **TeXlive**: http://[YOUR_IP]:8084
-* **TeXLive 2026**: http://[YOUR_IP]:8087
+* **TeX Live 2026**: http://[YOUR_IP]:8087
+* **Repository Proxy**: http://[YOUR_IP]:8088
 
-**Traefik Routing:**
+**Traefik routing:**
+
 * **Traefik Dashboard**: http://traefik.[YOUR_IP]:8082
 * **Portainer**: http://portainer.[YOUR_IP]:8082
 * **TeXlyre Frontend**: http://[YOUR_IP]:8082/texlyre/
 * **FilePizza**: http://filepizza.[YOUR_IP]:8082
 * **Y-WebRTC**: http://ywebrtc.[YOUR_IP]:8082
 * **PeerJS**: http://peerjs.[YOUR_IP]:8082
-* **TeXlive**: http://texlive.[YOUR_IP]:8082
-* **TeXLive 2026**: http://texlive2026.[YOUR_IP]:8082
+* **TeX Live**: http://texlive.[YOUR_IP]:8082
+* **TeX Live 2026**: http://texlive2026.[YOUR_IP]:8082
+* **Repository Proxy**: http://proxy.[YOUR_IP]:8082
 
 ## Production Deployment
 
-For production with SSL certificates and domain routing:
+> **Repository Proxy exposure.** `ALLOWED_ORIGINS` sets a CORS header, which only
+> constrains browsers rather than access control. Anything that can reach
+> `proxy.yourdomain.com` can use it to download from any host in `ALLOWED_HOSTS`
+> at your bandwidth. Keep `PROXY_ALLOWED_HOSTS` to the links you import
+> from or drop it from `SERVICES` if the
+> deployment is public and does not need URL import.
+
+For production with TLS and domain routing:
 
 ```bash
 cp envfile.production .env
-# Configure your domain and SSL settings
-docker compose up -d
+# Configure PRODUCTION_DOMAIN and Traefik certificate settings
+docker compose up -d --remove-orphans
 ```
 
-`envfile.production` sets `TEXLYRE_USERDATA_VARIANT=production`, which points the
-frontend at `https://` and `wss://` subdomains of `PRODUCTION_DOMAIN`.
-
-### SSL Configuration
-
-Production deployment requires:
-1. Valid domain name pointing to your server
-2. SSL certificate configuration in Traefik
-3. Firewall configuration for ports 80, 443
-4. DNS configuration for subdomains
+`envfile.production` sets `TEXLYRE_USERDATA_VARIANT=production`, which uses `https://`
+and `wss://` endpoint layers for selected services.
 
 ### Production Environment Variables
 
 ```env
-DOMAIN=yourdomain.com
+PRODUCTION_DOMAIN=yourdomain.com
 BIND_IP=0.0.0.0
 TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_EMAIL=your@email.com
 ```
 
+Production deployment also requires DNS records for the selected service subdomains,
+valid certificate configuration in Traefik, and firewall access to ports 80 and 443.
+
 ### HTTPS Access
 
-**Production URLs:**
 * **TeXlyre Frontend**: https://yourdomain.com/texlyre/
 * **FilePizza**: https://filepizza.yourdomain.com
 * **Y-WebRTC**: https://ywebrtc.yourdomain.com
 * **PeerJS**: https://peerjs.yourdomain.com
-* **TeXlive**: https://texlive.yourdomain.com
-* **TeXLive 2026**: https://texlive2026.yourdomain.com
+* **TeX Live**: https://texlive.yourdomain.com
+* **TeX Live 2026**: https://texlive2026.yourdomain.com
+* **Repository Proxy**: https://proxy.yourdomain.com
 
 ## Custom Port Configuration
 
-When using network hosting, custom ports prevent conflicts and provide direct access:
+`docker-compose.custom-ports.yml` exposes the service ports directly while retaining
+Traefik routing:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.custom-ports.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.custom-ports.yml up -d --remove-orphans
 ```
 
-This configuration exposes services on dedicated ports while maintaining subdomain routing through Traefik.
+Disabled profile services are ignored even though the override file contains their port
+mapping.
 
-## TeXLive 2026 Server
+## TeX Live 2026 Storage
 
-The service builds from `services/texlyre-busytex-build/texlive-server`, which is a
-subdirectory of the submodule rather than its root. It requires a TeX Live 2026
-`texmf-dist` tree on the host, mounted read-only at `/texmf`, and caches path lookups
-in the shared `redis` service.
+`texlive2026-server` builds from
+`services/texlyre-busytex-build/texlive-server`. It requires a TeX Live 2026
+`texmf-dist` tree mounted read-only at `/texmf` and uses the shared Redis service for path
+lookup caching.
 
-The tree is supplied by whichever of these is set:
+The tree is supplied by one of these variables:
 
 | Variable | Effect |
 |---|---|
-| `TEXMF_URL` | default; `texlive2026-texmf` downloads and unpacks the archive into the `texmf` named volume on first start |
-| `TEXMF_ROOT` | absolute host path bind mounted read-only, no download, overrides the URL |
-| neither | the init container fails with instructions, and the server does not start |
+| `TEXMF_URL` | The `texlive2026-texmf` initializer downloads and unpacks the archive into the `texmf` named volume on first start. |
+| `TEXMF_ROOT` | An absolute host path is mounted instead, bypassing the download. |
+| neither | The initializer fails with instructions and the server is not started against an empty tree. |
 
-`TEXMF_STRIP` controls `tar --strip-components` and defaults to `1`, matching an
-archive whose single top-level directory is `texmf-dist`.
+`TEXMF_STRIP` controls `tar --strip-components` and defaults to `1`, matching an archive
+whose single top-level directory is `texmf-dist`.
+
+The default environment files select `texlive2026`, so the initializer and server start
+with the rest of the stack:
 
 ```bash
-TEXMF_URL=https://example.org/texmf-dist.tar.zst
-docker compose --profile texlive2026 up -d
+docker compose up -d
 ```
 
-`texlive2026-server` waits on `service_completed_successfully`, so a failed or missing
-download stops the server from starting against an empty tree rather than serving 301s
-for every request.
+To start only this built-in service group with Traefik:
 
-The archive is produced by the `build-texlive-full` workflow in `texlyre-busytex-build`,
-which downloads the TeX Live 2026 ISO, runs `install-tl` with `scheme-full`, prunes
-`doc/`, `source/`, `scripts/`, `bin/` and `tlpkg/`, and publishes the result to the
-`texlive-full-2026` release. That tag is stable, so the default `TEXMF_URL` keeps working
-across rebuilds. If the release has not been published yet, the init container says so
-rather than failing with a bare download error.
+```bash
+SERVICES=texlive2026 COMPOSE_PROFILES=texlive2026 docker compose up -d --remove-orphans
+```
 
-Because it sits behind the `texlive2026` profile, plain `docker compose up -d` leaves it
-untouched. The publish workflow builds it regardless of the profile.
+`texlive2026-server` waits for `texlive2026-texmf` to complete successfully. A failed or
+missing archive therefore prevents the server from returning redirects against an empty
+tree.
+
+The default archive is produced by the `build-texlive-full` workflow in
+`texlyre-busytex-build`. That workflow installs the full TeX Live 2026 scheme, prunes
+content not needed by the on-demand server, and publishes the result under the stable
+`texlive-full-2026` release.
+
+## Chelys Recipes
+
+`RECIPES` accepts comma- or whitespace-separated recipe references:
+
+```text
+[<type>/]<id>[@<version>][?<variable>=<value>&...]
+```
+
+For example:
+
+```env
+RECIPES=sile@0.15.13,ltex-ls-plus?language=en-GB
+```
+
+`npm run recipes` resolves the references from `RECIPES_REGISTRY` (defaulting to the
+public Chelys recipe registry), writes `docker-compose.recipes.yml`, and writes the
+matching frontend userdata layer. Start it with `npm run up:recipes`. Run
+`npm run recipes:list-verbose` to inspect recipe variables.
 
 ## Image Publishing and Versions
 
 Every buildable service in `docker-compose.yml` declares both an `image:` tag and an
 `x-publish:` block. `scripts/publish-matrix.cjs` reads that file and emits the CI build
-matrix, so the compose file is the only place a version is decided.
+matrix, so the Compose file is the only place an infrastructure image version is decided.
 
-Versions here are owned by this repo, not inherited from the upstream forks, because a
-submodule pins a commit rather than a release. Bump the tag whenever you move a
-submodule pointer.
+Image versions are owned by this repository rather than inherited from the upstream forks,
+since each fork's release is independent of the deployment bundle. The `image:` tag is
+bumped whenever a submodule pin moves.
 
 Images are labelled with `org.opencontainers.image.source` and `.revision` pointing at
-the submodule's own repository and commit, since the building repo is not the source
-repo. Use `x-publish.source` when the build context is not the submodule root, as with
-`texlive2026-server`.
+the submodule repository and commit. `x-publish.source` names the submodule when the build
+context is a subdirectory of it, as with `texlive2026-server`.
 
-Until the first successful run of that workflow no tags exist yet, which is harmless:
-every service keeps its `build:` context, so `docker compose up -d --build` compiles from
-the submodules and tags the result under the GHCR name locally. The registry only becomes
-the source once something has been pushed there.
+Until the first successful workflow run, the published tags may not exist. Every service
+retains its `build:` context, so `docker compose up -d --build` can build and tag it
+locally.
 
 To publish a new build:
 
-1. Move the submodule pointer (or merge the Renovate PR that does).
+1. Move the submodule pointer, or merge the Renovate PR that does so.
 2. Bump the matching `image:` tag in `docker-compose.yml`.
 3. Push to `main`.
 
-Existing tags are never overwritten unless you run the workflow manually with `force`.
+Existing tags are not overwritten unless the workflow is run manually with `force`.
 
-### Consuming from Chelys
+### Build Architecture
 
-When `RECIPES_DISPATCH_TOKEN` is configured, each successful publish dispatches an
+Multi-platform images are built on native runners. The workflow expands each service's
+`x-publish.platforms` into one job per platform, maps `linux/arm64` to
+`ubuntu-24.04-arm`, pushes each build by digest, and then assembles the manifest list.
+Build cache scopes are separated by service and platform.
+
+### Submodule Pinning
+
+A version is declared once and propagated in one direction:
+
+```text
+.gitmodules tag=  ->  submodule commit  ->  docker-compose.yml image tag
+```
+
+`scripts/sync-submodule-tags.cjs` fetches tags, checks out each declared tag, and stages
+the resulting commit. `scripts/sync-compose-tags.cjs` reads the exact tag at each source
+and rewrites the service's `image:` tag, removing a leading `v` from semantic versions.
+
+```bash
+npm run sync
+npm run sync:check
+```
+
+Git itself does not interpret the custom `tag` property in `.gitmodules`; the recorded
+submodule commit is what `git submodule update` restores, and these scripts keep it equal
+to the declared release.
+
+### Consuming Images from Chelys
+
+When `RECIPES_DISPATCH_TOKEN` is configured, each successful image publish dispatches an
 `image-published` event to `TeXlyre/chelys-recipes` with the service name and image
-reference, so the matching recipe version can be raised automatically. Without the
-secret, that step is skipped and publishing works as normal.
+reference. The matching recipe version can then be updated after the multi-platform
+manifest exists. Without the secret, image publishing proceeds without dispatching.

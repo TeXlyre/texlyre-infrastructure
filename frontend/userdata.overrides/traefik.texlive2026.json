@@ -1,0 +1,5 @@
+{
+  "settings": {
+    "latex-busytex-endpoint": "http://texlive2026.${BASE_DOMAIN}:${HTTP_PORT}"
+  }
+}

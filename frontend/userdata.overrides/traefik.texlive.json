@@ -1,0 +1,5 @@
+{
+  "settings": {
+    "latex-texlive-endpoint": "http://texlive.${BASE_DOMAIN}:${HTTP_PORT}"
+  }
+}

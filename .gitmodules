@@ -11,12 +11,12 @@
 [submodule "services/peerjs-server"]
 	path = services/peerjs-server
 	url = https://github.com/TeXlyre/peerjs-server.git
-	tag = v1.0.2
+	tag = v1.0.3
 	docker-image = peerjs-server
 [submodule "services/texlive-ondemand-server"]
 	path = services/texlive-ondemand-server
 	url = https://github.com/TeXlyre/texlive-ondemand-server.git
-	tag = v2020.0.0
+	tag = v2020.0.1
 	docker-image = texlive-ondemand-server
 [submodule "services/filepizza-server"]
 	path = services/filepizza-server
@@ -26,5 +26,10 @@
 [submodule "services/texlyre-busytex-build"]
 	path = services/texlyre-busytex-build
 	url = https://github.com/TeXlyre/texlyre-busytex-build.git
-	tag = v2026.0.0
+	tag = v2026.0.1
 	docker-image = texlive2026-server
+[submodule "services/repository-proxy-server"]
+	path = services/repository-proxy-server
+	url = https://github.com/TeXlyre/repository-proxy-server.git
+	tag = v0.2.0
+	docker-image = repository-proxy-server

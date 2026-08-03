@@ -1,5 +1,50 @@
 {
-  "dependencies": {
-    "js-yaml": "^5.2.2"
-  }
+	"name": "texlyre-infrastructure",
+	"private": true,
+	"version": "0.3.1",
+	"description": "An omni-repo for deploying all TeXlyre servers locally",
+	"author": "Fares Abawi <fares@abawi.me> (https://abawi.me)",
+	"license": "AGPL-3.0-or-later",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/TeXlyre/texlyre-infrastructure.git"
+	},
+	"engines": {
+		"node": ">=22.0.0",
+		"npm": ">=10.5.0"
+	},
+	"scripts": {
+		"postinstall": "git submodule update --init --recursive",
+		"submodules": "git submodule update --init --recursive",
+		"submodules:status": "git submodule status --recursive",
+		"sync": "node scripts/sync-submodule-tags.cjs && node scripts/sync-compose-tags.cjs",
+		"sync:check": "node scripts/sync-submodule-tags.cjs --check && node scripts/sync-compose-tags.cjs --check",
+		"recipes": "node --env-file-if-exists=.env scripts/generate-recipes.cjs",
+		"recipes:list": "node --env-file-if-exists=.env scripts/generate-recipes.cjs --list",
+		"recipes:list-verbose": "node --env-file-if-exists=.env scripts/generate-recipes.cjs --list-verbose",
+		"start": "npm run up:build",
+		"up": "docker compose up -d --remove-orphans",
+		"up:build": "docker compose up -d --build --remove-orphans",
+		"up:network": "docker compose -f docker-compose.yml -f docker-compose.custom-ports.yml up -d --remove-orphans",
+		"up:recipes": "docker compose -f docker-compose.yml -f docker-compose.recipes.yml up -d --remove-orphans",
+		"down": "docker compose --profile \"*\" down",
+		"down:recipes": "docker compose -f docker-compose.yml -f docker-compose.recipes.yml --profile \"*\" down",
+		"down:volumes": "docker compose --profile \"*\" down -v",
+		"restart": "docker compose restart",
+		"ps": "docker compose ps",
+		"logs": "docker compose logs -f",
+		"pull": "docker compose pull",
+		"pull:third-party": "docker compose pull --ignore-buildable",
+		"config": "docker compose --profile \"*\" config",
+		"matrix": "node scripts/publish-matrix.cjs docker-compose.yml",
+		"lint": "npm run lint:compose && npm run sync:check && npm run lint:biome:check",
+		"lint:compose": "docker compose --profile \"*\" config --quiet",
+		"lint:biome:check": "biome check .",
+		"lint:biome:fix": "biome check . --fix",
+		"format": "biome format --write ."
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.5.6",
+		"js-yaml": "^5.1.0"
+	}
 }

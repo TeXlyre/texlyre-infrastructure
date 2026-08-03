@@ -1,0 +1,5 @@
+{
+  "settings": {
+    "latex-busytex-endpoint": "https://texlive2026.${PRODUCTION_DOMAIN}"
+  }
+}

@@ -10,18 +10,34 @@ BIND_IP=127.0.0.1  # Localhost only
 HTTP_PORT=8082
 HTTPS_PORT=8443
 
+# Built-in services. Use all (default), none, or a comma-separated subset of:
+#  frontend,portainer,filepizza,ywebrtc,peerjs,texlive,texlive2026,proxy,redis
+# Redis is also activated automatically by the filepizza and texlive2026 profiles.
+SERVICES=all
+COMPOSE_PROFILES=${SERVICES:-all}
+
 # Frontend userdata: selects frontend/userdata.overrides/<variant>.json
 TEXLYRE_USERDATA_VARIANT=traefik
 ## Optional JSON object merged on top of the variant, e.g. {"settings":{"theme-variant":"atom_light"}}
 #TEXLYRE_USERDATA=
 
+# Chelys recipes served alongside the stack, resolved by id from the recipe registry
+#  <id>[@<version>][?<variable>=<value>&...], e.g. sile,ltex-ls-plus?language=en-GB
+#  "npm run recipes:list" prints the available ids, "npm run recipes" regenerates
+#  docker-compose.recipes.yml, then "npm run up:recipes" starts them
+RECIPES=
+
+## Repository proxy download allowlist, comma-separated, empty uses the built-in defaults
+#PROXY_ALLOWED_HOSTS=github.com,githubusercontent.com,gitlab.com,codeberg.org
+#PROXY_MAX_DOWNLOAD_BYTES=536870912  # Maximum size of download allowed through proxy in bytes 
+
 # Custom properties generalized for multiple services
-REDIS_PORT=6379  # Redis instance will be created by FilePizza and reused by Texlive
+REDIS_PORT=6379  # Shared Redis port used by FilePizza and TeX Live 2026
 API_ORIGINS=*  # Too relaxed, so you need to set it depending on how you limit CORS
 ## For localhost (without HTTPS), you can remove PEERJS_SERVERS and it will default to public (public requires internet connection)
 PEERJS_SERVERS=http://peerjs.${PRODUCTION_DOMAIN}:${HTTP_PORT}/texlyre/  # This is required by FilePizza
 
-# TeXLive 2026 server (profile: texlive2026), downloaded into a named volume on first start
+# TeXLive 2026 server, downloaded into a named volume on first start
 TEXMF_URL=https://github.com/TeXlyre/texlyre-busytex-build/releases/download/texlive-full-2026/texmf-dist.tar.zst
 ## Or point at an existing texmf-dist tree on the host, absolute path, to skip the download
 #TEXMF_ROOT=/absolute/path/to/texlive-full/texmf-dist

@@ -1,0 +1,5 @@
+{
+  "settings": {
+    "file-sync-server-url": "https://filepizza.${PRODUCTION_DOMAIN}"
+  }
+}

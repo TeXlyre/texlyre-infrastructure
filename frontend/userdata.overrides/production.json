@@ -1,9 +1,5 @@
 {
   "settings": {
-    "collab-signaling-servers": "wss://ywebrtc.${PRODUCTION_DOMAIN}",
-    "file-sync-server-url": "https://filepizza.${PRODUCTION_DOMAIN}",
-    "latex-texlive-endpoint": "https://texlive.${PRODUCTION_DOMAIN}",
-    "latex-busytex-endpoint": "https://texlive2026.${PRODUCTION_DOMAIN}",
     "theme-variant": "atom_light"
   }
 }

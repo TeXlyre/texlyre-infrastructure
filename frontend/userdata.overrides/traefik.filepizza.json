@@ -1,0 +1,5 @@
+{
+  "settings": {
+    "file-sync-server-url": "http://filepizza.${BASE_DOMAIN}:${HTTP_PORT}"
+  }
+}
