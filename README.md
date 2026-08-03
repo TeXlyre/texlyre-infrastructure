@@ -162,9 +162,26 @@ With `SERVICES=all`, the local stack is available through Traefik on port 8082.
 * **PeerJS**: http://peerjs.localhost:8082
 * **TeX Live**: http://texlive.localhost:8082
 * **TeX Live 2026**: http://texlive2026.localhost:8082
+* **Repository Proxy**: http://proxy.localhost:8082
 
 Only selected services are started and advertised to TeXlyre.
 
+### Container Names
+
+Depending on `SERVICES`, the deployment uses these container names:
+
+* `${COMPOSE_PROJECT_NAME}-traefik`
+* `${COMPOSE_PROJECT_NAME}-portainer`
+* `${COMPOSE_PROJECT_NAME}-frontend`
+* `${COMPOSE_PROJECT_NAME}-filepizza`
+* `${COMPOSE_PROJECT_NAME}-ywebrtc`
+* `${COMPOSE_PROJECT_NAME}-peerjs`
+* `${COMPOSE_PROJECT_NAME}-texlive`
+* `${COMPOSE_PROJECT_NAME}-texlive2026-texmf`
+* `${COMPOSE_PROJECT_NAME}-texlive2026`
+* `${COMPOSE_PROJECT_NAME}-proxy`
+* `${COMPOSE_PROJECT_NAME}-redis`
+* 
 ## TeX Live 2026 Server
 
 `texlive2026-server` serves TeX Live 2026 files on demand for BusyTeX. It is enabled by
@@ -240,18 +257,3 @@ that are no longer listed in the current `SERVICES` selection.
 
 For network hosting, production deployment, custom ports, TeX Live storage, recipe
 registry overrides, and image publishing details, see [ADVANCED.md](ADVANCED.md).
-
-## Container Names
-
-Depending on `SERVICES`, the deployment uses these container names:
-
-* `${COMPOSE_PROJECT_NAME}-traefik`
-* `${COMPOSE_PROJECT_NAME}-portainer`
-* `${COMPOSE_PROJECT_NAME}-frontend`
-* `${COMPOSE_PROJECT_NAME}-filepizza`
-* `${COMPOSE_PROJECT_NAME}-ywebrtc`
-* `${COMPOSE_PROJECT_NAME}-peerjs`
-* `${COMPOSE_PROJECT_NAME}-texlive`
-* `${COMPOSE_PROJECT_NAME}-texlive2026-texmf`
-* `${COMPOSE_PROJECT_NAME}-texlive2026`
-* `${COMPOSE_PROJECT_NAME}-redis`
