@@ -38,6 +38,6 @@ API_ORIGINS=*  # Too relaxed, so you need to set it depending on how you limit C
 PEERJS_SERVERS=http://peerjs.${PRODUCTION_DOMAIN}:${HTTP_PORT}/texlyre/  # This is required by FilePizza
 
 # TeXLive 2026 server, downloaded into a named volume on first start
-TEXMF_URL=https://github.com/TeXlyre/texlyre-busytex-build/releases/download/texlive-full-2026/texmf-dist.tar.zst
+TEXMF_URL=https://github.com/TeXlyre/texlyre-busytex-build/releases/download/texlive-full-2026.1.0/texmf-dist.tar.zst
 ## Or point at an existing texmf-dist tree on the host, absolute path, to skip the download
 #TEXMF_ROOT=/absolute/path/to/texlive-full/texmf-dist

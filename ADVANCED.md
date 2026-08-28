@@ -184,7 +184,7 @@ tree.
 The default archive is produced by the `build-texlive-full` workflow in
 `texlyre-busytex-build`. That workflow installs the full TeX Live 2026 scheme, prunes
 content not needed by the on-demand server, and publishes the result under the stable
-`texlive-full-2026` release.
+`texlive-full-2026.1.0` release.
 
 ## Chelys Recipes
 
