@@ -44,7 +44,7 @@ services:
       - "traefik.http.routers.portainer-secure.service=portainer"
 
   texlyre-frontend:
-    image: ghcr.io/texlyre/texlyre-frontend:0.10.1
+    image: ghcr.io/texlyre/texlyre-frontend:0.11.0
     profiles: [ all, frontend ]
     build:
       context: .
@@ -121,7 +121,7 @@ services:
       - traefik
 
   texlive2026-server:
-    image: ghcr.io/texlyre/texlive2026-server:2026.0.1
+    image: ghcr.io/texlyre/texlive2026-server:2026.1.0
     build:
       context: ./services/texlyre-busytex-build/texlive-server
     x-publish:
