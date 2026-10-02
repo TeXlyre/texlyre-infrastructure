@@ -1,7 +1,7 @@
 {
 	"name": "texlyre-infrastructure",
 	"private": true,
-	"version": "0.3.2",
+	"version": "0.3.3",
 	"description": "An omni-repo for deploying all TeXlyre servers locally",
 	"author": "Fares Abawi <fares@abawi.me> (https://abawi.me)",
 	"license": "AGPL-3.0-or-later",

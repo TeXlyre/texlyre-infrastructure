@@ -84,13 +84,20 @@ function exactGitTag(source, sourceValue) {
 
 		if (tagged && tagged === head) return declared;
 
-		throw new Error(`Source "${sourceValue}" is not checked out at "${declared}"`);
+		throw new Error(
+			`Source "${sourceValue}" is not checked out at "${declared}"`,
+		);
 	}
 
-	const described = tryGit(['describe', '--tags', '--exact-match', 'HEAD'], source);
+	const described = tryGit(
+		['describe', '--tags', '--exact-match', 'HEAD'],
+		source,
+	);
 
 	if (!described) {
-		throw new Error(`Source "${sourceValue}" is not checked out at an exact Git tag`);
+		throw new Error(
+			`Source "${sourceValue}" is not checked out at an exact Git tag`,
+		);
 	}
 
 	return described;
