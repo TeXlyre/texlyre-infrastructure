@@ -1,3 +1,4 @@
+// scripts/generate-recipes.cjs
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -13,6 +14,8 @@ const BLOCK_SUFFIX = '-server';
 const SETTING_KEYS = {
 	lsp: 'generic-lsp-configs',
 	typesetter: 'generic-typesetter-configs',
+	storage: 'generic-storage-configs',
+	acp: 'generic-acp-configs',
 };
 
 function selection() {
@@ -109,6 +112,15 @@ function resolveValues(manifest, overrides) {
 		if (!(key in values)) {
 			throw new Error(`Recipe "${manifest.id}" declares no variable "${key}"`);
 		}
+		if (
+			(manifest.variables ?? []).some(
+				(variable) => variable.key === key && variable.kind === 'secret',
+			)
+		) {
+			throw new Error(
+				`Set the secret '${key}' through the Compose environment, not the recipe reference`,
+			);
+		}
 		values[key] = String(value);
 	}
 
@@ -151,13 +163,18 @@ function servicePort(manifest, values) {
 	return port;
 }
 
-function imageSource(entry, manifest) {
+function dockerMode(manifest) {
 	const mode = (manifest.modes ?? []).find((item) => item.kind === 'docker');
 
 	if (!mode) {
 		throw new Error(`Recipe "${manifest.id}" has no docker install mode`);
 	}
 
+	return mode;
+}
+
+function imageSource(entry, manifest) {
+	const mode = dockerMode(manifest);
 	const image = typeof mode.image === 'string' ? mode.image : '';
 
 	if (REGISTRY_IMAGE.test(image)) {
@@ -168,6 +185,55 @@ function imageSource(entry, manifest) {
 		image: `${image.split(':')[0] || `chelys/${entry.id}`}:${entry.version}`,
 		build: `${SOURCE_REPOSITORY}#${SOURCE_REF}:recipes/${entry.type}/${entry.id}/${entry.version}`,
 	};
+}
+
+function persistentVolumes(manifest, values) {
+	return substitute(dockerMode(manifest).volumes ?? [], values).map((volume) => {
+		if (
+			!volume ||
+			typeof volume.id !== 'string' ||
+			volume.id.length === 0 ||
+			typeof volume.target !== 'string' ||
+			!volume.target.startsWith('/')
+		) {
+			throw new Error(`Recipe "${manifest.id}" declares an invalid docker volume`);
+		}
+
+		if (
+			volume.name !== undefined &&
+			(typeof volume.name !== 'string' ||
+				!/^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/.test(volume.name))
+		) {
+			throw new Error(
+				`Recipe "${manifest.id}" declares an invalid docker volume name`,
+			);
+		}
+
+		return {
+			id: volume.id,
+			target: volume.target,
+			...(volume.name ? { name: volume.name } : {}),
+		};
+	});
+}
+
+function composeEnvironment(manifest, values) {
+	const secrets = new Set(
+		(manifest.variables ?? [])
+			.filter((variable) => variable.kind === 'secret')
+			.map((variable) => variable.key),
+	);
+	return Object.entries(manifest.env ?? {}).map(([name, raw]) => {
+		if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name) || typeof raw !== 'string') {
+			throw new Error(
+				`Recipe "${manifest.id}" declares an invalid environment entry`,
+			);
+		}
+		if ([...secrets].some((key) => raw.includes(`\${${key}}`))) {
+			return name;
+		}
+		return `${name}=${substitute(raw, values)}`;
+	});
 }
 
 function transportConfig(entry, config) {
@@ -212,7 +278,45 @@ function typesetterBlock(entry, manifest, config) {
 	};
 }
 
-const BLOCK_BUILDERS = { lsp: lspBlock, typesetter: typesetterBlock };
+function storageBlock(entry, manifest, config) {
+	return {
+		id: `${entry.configId}${BLOCK_SUFFIX}`,
+		name: `${manifest.name} (server)`,
+		enabled: true,
+		transportConfig: transportConfig(entry, config),
+	};
+}
+
+function acpBlock(entry, manifest, config) {
+	return {
+		id: `${entry.configId}${BLOCK_SUFFIX}`,
+		name: `${manifest.name} (server)`,
+		enabled: true,
+		...(manifest.icon ? { icon: manifest.icon } : {}),
+		transportConfig: {
+			...transportConfig(entry, config),
+			contentLength: false,
+		},
+		...(config.cwd ? { cwd: config.cwd } : {}),
+		...(config.mcpServers ? { mcpServers: config.mcpServers } : {}),
+		...(config.sessionMeta ? { sessionMeta: config.sessionMeta } : {}),
+	};
+}
+
+const BLOCK_BUILDERS = {
+	lsp: lspBlock,
+	typesetter: typesetterBlock,
+	storage: storageBlock,
+	acp: acpBlock,
+};
+
+function safeVolumePart(value) {
+	return value.replace(/[^a-zA-Z0-9_.-]/g, '-');
+}
+
+function composeVolumeName(entry, volume) {
+	return `recipe-${safeVolumePart(entry.configId)}-${safeVolumePart(volume.id)}`;
+}
 
 function composeService(entry) {
 	const name = `recipe-${entry.configId}`;
@@ -226,8 +330,21 @@ function composeService(entry) {
 		...(entry.build ? [`    build: ${entry.build}`] : []),
 		`    container_name: chelys-recipe-${entry.configId}`,
 		'    restart: unless-stopped',
+		...(entry.init ? ['    init: true'] : []),
 		'    environment:',
 		`      - WS_PORT=${entry.port}`,
+		...entry.environment
+			.filter((value) => !value.startsWith('WS_PORT=') && value !== 'WS_PORT')
+			.map((value) => `      - ${JSON.stringify(value)}`),
+		...(entry.volumes.length > 0
+			? [
+					'    volumes:',
+					...entry.volumes.map(
+						(volume) =>
+							`      - ${composeVolumeName(entry, volume)}:${volume.target}`,
+					),
+				]
+			: []),
 		'    networks:',
 		'      - traefik',
 		'    labels:',
@@ -247,6 +364,12 @@ function composeService(entry) {
 }
 
 function composeFile(entries) {
+	const volumes = new Map(
+		entries.flatMap((entry) =>
+			entry.volumes.map((volume) => [composeVolumeName(entry, volume), volume]),
+		),
+	);
+
 	return [
 		'# Generated by scripts/generate-recipes.cjs, do not edit',
 		'services:',
@@ -255,6 +378,21 @@ function composeFile(entries) {
 		`      - ./${USERDATA_FILE}:/etc/texlyre/overrides/recipes.json:ro`,
 		'',
 		...entries.map(composeService),
+		...(volumes.size > 0
+			? [
+					'volumes:',
+					...[...volumes].flatMap(([key, volume]) => [
+						`  ${key}:`,
+						...(volume.name
+							? [
+									`    name: ${JSON.stringify(volume.name)}`,
+									'    external: true',
+								]
+							: []),
+					]),
+					'',
+				]
+			: []),
 	].join('\n');
 }
 
@@ -377,6 +515,9 @@ async function main() {
 			typeof config.configId === 'string' ? config.configId : manifest.id;
 		entry.port = servicePort(manifest, values);
 		entry.block = builder(entry, manifest, config);
+		entry.volumes = persistentVolumes(manifest, values);
+		entry.environment = composeEnvironment(manifest, values);
+		entry.init = (dockerMode(manifest).runArgs ?? []).includes('--init');
 
 		Object.assign(entry, imageSource(entry, manifest));
 		entries.push(entry);

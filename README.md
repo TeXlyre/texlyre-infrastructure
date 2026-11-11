@@ -125,6 +125,12 @@ npm run up:recipes
 Use `npm run recipes:list` to list available recipe IDs. Generated recipe services and
 their TeXlyre userdata are removed when `RECIPES` is empty and `npm run recipes` is run.
 
+Garage and ACP recipes are also supported. Persistent recipe volumes survive container
+recreation. Explicitly named volumes must exist before deployment and are never
+implicitly replaced. For `RECIPES=acp/claude-agent`, provide `ANTHROPIC_API_KEY` through
+the deployment environment (not the recipe reference), and restrict access to the
+agent endpoint. See [ADVANCED.md](ADVANCED.md#chelys-recipes) for details.
+
 ## Frontend Configuration
 
 The frontend image contains TeXlyre's own defaults. At container start,
