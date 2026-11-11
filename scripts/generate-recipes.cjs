@@ -15,6 +15,7 @@ const SETTING_KEYS = {
 	lsp: 'generic-lsp-configs',
 	typesetter: 'generic-typesetter-configs',
 	storage: 'generic-storage-configs',
+	acp: 'generic-acp-configs',
 };
 
 function selection() {
@@ -111,6 +112,15 @@ function resolveValues(manifest, overrides) {
 		if (!(key in values)) {
 			throw new Error(`Recipe "${manifest.id}" declares no variable "${key}"`);
 		}
+		if (
+			(manifest.variables ?? []).some(
+				(variable) => variable.key === key && variable.kind === 'secret',
+			)
+		) {
+			throw new Error(
+				`Set the secret '${key}' through the Compose environment, not the recipe reference`,
+			);
+		}
 		values[key] = String(value);
 	}
 
@@ -177,8 +187,8 @@ function imageSource(entry, manifest) {
 	};
 }
 
-function persistentVolumes(manifest) {
-	return (dockerMode(manifest).volumes ?? []).map((volume) => {
+function persistentVolumes(manifest, values) {
+	return substitute(dockerMode(manifest).volumes ?? [], values).map((volume) => {
 		if (
 			!volume ||
 			typeof volume.id !== 'string' ||
@@ -189,7 +199,40 @@ function persistentVolumes(manifest) {
 			throw new Error(`Recipe "${manifest.id}" declares an invalid docker volume`);
 		}
 
-		return { id: volume.id, target: volume.target };
+		if (
+			volume.name !== undefined &&
+			(typeof volume.name !== 'string' ||
+				!/^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/.test(volume.name))
+		) {
+			throw new Error(
+				`Recipe "${manifest.id}" declares an invalid docker volume name`,
+			);
+		}
+
+		return {
+			id: volume.id,
+			target: volume.target,
+			...(volume.name ? { name: volume.name } : {}),
+		};
+	});
+}
+
+function composeEnvironment(manifest, values) {
+	const secrets = new Set(
+		(manifest.variables ?? [])
+			.filter((variable) => variable.kind === 'secret')
+			.map((variable) => variable.key),
+	);
+	return Object.entries(manifest.env ?? {}).map(([name, raw]) => {
+		if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name) || typeof raw !== 'string') {
+			throw new Error(
+				`Recipe "${manifest.id}" declares an invalid environment entry`,
+			);
+		}
+		if ([...secrets].some((key) => raw.includes(`\${${key}}`))) {
+			return name;
+		}
+		return `${name}=${substitute(raw, values)}`;
 	});
 }
 
@@ -244,10 +287,27 @@ function storageBlock(entry, manifest, config) {
 	};
 }
 
+function acpBlock(entry, manifest, config) {
+	return {
+		id: `${entry.configId}${BLOCK_SUFFIX}`,
+		name: `${manifest.name} (server)`,
+		enabled: true,
+		...(manifest.icon ? { icon: manifest.icon } : {}),
+		transportConfig: {
+			...transportConfig(entry, config),
+			contentLength: false,
+		},
+		...(config.cwd ? { cwd: config.cwd } : {}),
+		...(config.mcpServers ? { mcpServers: config.mcpServers } : {}),
+		...(config.sessionMeta ? { sessionMeta: config.sessionMeta } : {}),
+	};
+}
+
 const BLOCK_BUILDERS = {
 	lsp: lspBlock,
 	typesetter: typesetterBlock,
 	storage: storageBlock,
+	acp: acpBlock,
 };
 
 function safeVolumePart(value) {
@@ -270,8 +330,12 @@ function composeService(entry) {
 		...(entry.build ? [`    build: ${entry.build}`] : []),
 		`    container_name: chelys-recipe-${entry.configId}`,
 		'    restart: unless-stopped',
+		...(entry.init ? ['    init: true'] : []),
 		'    environment:',
 		`      - WS_PORT=${entry.port}`,
+		...entry.environment
+			.filter((value) => !value.startsWith('WS_PORT=') && value !== 'WS_PORT')
+			.map((value) => `      - ${JSON.stringify(value)}`),
 		...(entry.volumes.length > 0
 			? [
 					'    volumes:',
@@ -300,8 +364,10 @@ function composeService(entry) {
 }
 
 function composeFile(entries) {
-	const volumes = entries.flatMap((entry) =>
-		entry.volumes.map((volume) => composeVolumeName(entry, volume)),
+	const volumes = new Map(
+		entries.flatMap((entry) =>
+			entry.volumes.map((volume) => [composeVolumeName(entry, volume), volume]),
+		),
 	);
 
 	return [
@@ -312,8 +378,20 @@ function composeFile(entries) {
 		`      - ./${USERDATA_FILE}:/etc/texlyre/overrides/recipes.json:ro`,
 		'',
 		...entries.map(composeService),
-		...(volumes.length > 0
-			? ['volumes:', ...volumes.map((volume) => `  ${volume}:`), '']
+		...(volumes.size > 0
+			? [
+					'volumes:',
+					...[...volumes].flatMap(([key, volume]) => [
+						`  ${key}:`,
+						...(volume.name
+							? [
+									`    name: ${JSON.stringify(volume.name)}`,
+									'    external: true',
+								]
+							: []),
+					]),
+					'',
+				]
 			: []),
 	].join('\n');
 }
@@ -437,7 +515,9 @@ async function main() {
 			typeof config.configId === 'string' ? config.configId : manifest.id;
 		entry.port = servicePort(manifest, values);
 		entry.block = builder(entry, manifest, config);
-		entry.volumes = persistentVolumes(manifest);
+		entry.volumes = persistentVolumes(manifest, values);
+		entry.environment = composeEnvironment(manifest, values);
+		entry.init = (dockerMode(manifest).runArgs ?? []).includes('--init');
 
 		Object.assign(entry, imageSource(entry, manifest));
 		entries.push(entry);

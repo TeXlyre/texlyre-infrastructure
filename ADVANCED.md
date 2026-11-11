@@ -205,6 +205,22 @@ public Chelys recipe registry), writes `docker-compose.recipes.yml`, and writes 
 matching frontend userdata layer. Start it with `npm run up:recipes`. Run
 `npm run recipes:list-verbose` to inspect recipe variables.
 
+Storage and ACP recipes can declare persistent Docker volumes. Unnamed volumes retain
+their existing Compose-managed names. If a recipe declares an explicit `volumes[].name`,
+the generator treats that volume as **external**: it must already exist, and Compose
+will not silently create an empty replacement. Restore the original volume or create
+a genuinely new one with `docker volume create <name>` before deploying. Never mount
+the same Garage volume into two running Garage instances (e.g., running it through the infrastructure and Chelys standalone simultaneously). Note to retain volume data, metadata,
+configuration, and `storage.env` together when backing it up or restoring a storage volume.
+
+ACP recipes generate `generic-acp-configs` with newline-delimited transport
+(`contentLength: false`) and forward any declared secret environment variable from
+the Compose environment instead of embedding its value in generated files. For the
+Claude Agent recipe, set `ANTHROPIC_API_KEY` in the shell or a private, untracked
+`.env` file, then select `RECIPES=acp/claude-agent`. Do not place secrets in recipe
+references. ACP endpoints can consume paid API access: restrict the Traefik endpoint
+to trusted clients, especially when using a publicly reachable deployment.
+
 ## Image Publishing and Versions
 
 Every buildable service in `docker-compose.yml` declares both an `image:` tag and an
