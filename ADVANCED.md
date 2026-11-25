@@ -16,8 +16,8 @@ core. A custom selection is a comma-separated combination of:
 frontend, portainer, filepizza, ywebrtc, peerjs, texlive, texlive2026, proxy, redis
 ```
 
-Redis also carries the `filepizza` and `texlive2026` profiles, so either service activates
-its shared Redis dependency even when `redis` is not written explicitly.
+Redis also carries the `filepizza`, `texlive` and `texlive2026` profiles, so these services
+activate their shared Redis dependency even when `redis` is not written explicitly.
 
 The frontend receives the same `SERVICES` value. Its entrypoint applies only the
 `<variant>.<service>.json` endpoint layers belonging to selected services. Removing a
@@ -83,7 +83,7 @@ The following URLs exist only for selected services.
 
 **Traefik routing:**
 
-* **Traefik Dashboard**: http://traefik.[YOUR_IP]:8082
+* **Traefik Dashboard**: http://localhost:8080/dashboard/ (on the Docker host)
 * **Portainer**: http://portainer.[YOUR_IP]:8082
 * **TeXlyre Frontend**: http://[YOUR_IP]:8082/texlyre/
 * **FilePizza**: http://filepizza.[YOUR_IP]:8082
@@ -102,31 +102,53 @@ The following URLs exist only for selected services.
 > from or drop it from `SERVICES` if the
 > deployment is public and does not need URL import.
 
-For production with TLS and domain routing:
+For direct public hosting with automatic Let's Encrypt certificates, copy the production
+settings:
 
 ```bash
 cp envfile.production .env
-# Configure PRODUCTION_DOMAIN and Traefik certificate settings
-docker compose up -d --remove-orphans
 ```
 
-`envfile.production` sets `TEXLYRE_USERDATA_VARIANT=production`, which uses `https://`
-and `wss://` endpoint layers for selected services.
-
-### Production Environment Variables
+Set `BASE_DOMAIN` and `PRODUCTION_DOMAIN` to your public domain, configure `FRONTEND_HOST`
+and `PORTAINER_HOST` if used, and select the required `SERVICES`. For example:
 
 ```env
-PRODUCTION_DOMAIN=yourdomain.com
-BIND_IP=0.0.0.0
-TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_EMAIL=your@email.com
+SERVICES=texlive,texlive2026
+ACME_EMAIL=your@email.com
+COMPOSE_FILE=docker-compose.yml:docker-compose.production.yml
 ```
 
-Production deployment also requires DNS records for the selected service subdomains,
-valid certificate configuration in Traefik, and firewall access to ports 80 and 443.
+```bash
+docker compose pull
+docker compose up -d --no-build --remove-orphans
+```
+
+The production override requires Docker Compose 2.24.4 or later. It publishes HTTP and
+HTTPS on all host addresses (including IPv6 where supported), redirects HTTP to HTTPS,
+disables the Traefik dashboard and stores certificates in the `traefik-certs` volume.
+Point the selected service hostnames at the server and allow inbound ports 80 and 443
+before starting. Use public DNS without a tunnel or proxy for direct HTTP validation.
+Use `docker compose restart traefik` to retry issuance after fixing DNS or routing.
+
+For a tunnel or externally terminated TLS, omit `COMPOSE_FILE` to retain the base
+configuration. The base dashboard is available only on the Docker host at
+`http://localhost:8080/dashboard/`.
+
+For direct HTTPS with recipes, regenerate them with `npm run recipes`, then use
+`docker compose -f docker-compose.yml -f docker-compose.production.yml -f docker-compose.recipes.yml up -d --remove-orphans`.
+Use the same files for subsequent management commands.
+
+`TRAEFIK_VERSION` defaults to `v3.7` and requires Docker API 1.40 or later. If automatic
+API negotiation fails, set `TRAEFIK_DOCKER_API_VERSION` to a compatible version reported
+by `docker version`. `LOG_MAX_SIZE` and `LOG_MAX_FILES` default to `10m` and `3`.
+
+`envfile.production` sets `TEXLYRE_USERDATA_VARIANT=production`, which uses `https://`
+and `wss://` endpoint layers for selected services. Keep management services out of
+`SERVICES` unless you intend to expose them and have secured access.
 
 ### HTTPS Access
 
-* **TeXlyre Frontend**: https://yourdomain.com/texlyre/
+* **TeXlyre Frontend**: https://texlyre.yourdomain.com/texlyre/
 * **FilePizza**: https://filepizza.yourdomain.com
 * **Y-WebRTC**: https://ywebrtc.yourdomain.com
 * **PeerJS**: https://peerjs.yourdomain.com
@@ -179,7 +201,10 @@ SERVICES=texlive2026 COMPOSE_PROFILES=texlive2026 docker compose up -d --remove-
 
 `texlive2026-server` waits for `texlive2026-texmf` to complete successfully. A failed or
 missing archive therefore prevents the server from returning redirects against an empty
-tree.
+tree. Interrupted downloads in the default managed volume are retried on the next
+start. Completed downloads record the archive configuration; changing it requires a
+controlled volume migration. Existing valid trees without a marker are reused without
+assuming their version. `TEXMF_ROOT` is never downloaded into or cleared automatically.
 
 The default archive is produced by the `build-texlive-full` workflow in
 `texlyre-busytex-build`. That workflow installs the full TeX Live 2026 scheme, prunes

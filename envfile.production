@@ -8,10 +8,11 @@ PRODUCTION_DOMAIN=yourdomain.com   # Need to set the A Records manually
 
 HTTP_PORT=80
 HTTPS_PORT=443
+ACME_EMAIL=
 
 # Built-in services. Use all (default), none, or a comma-separated subset of:
 #  frontend,portainer,filepizza,ywebrtc,peerjs,texlive,texlive2026,proxy,redis
-# Redis is also activated automatically by the filepizza and texlive2026 profiles.
+# Redis is also activated automatically by the filepizza, texlive and texlive2026 profiles.
 SERVICES=all
 COMPOSE_PROFILES=${SERVICES:-all}
 
