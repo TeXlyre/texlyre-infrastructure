@@ -3,6 +3,17 @@ const fs = require('node:fs');
 const path = require('node:path');
 const yaml = require('js-yaml');
 
+const composeSchema = yaml.CORE_SCHEMA.withTags(
+	yaml.mergeTag,
+	yaml.defineSequenceTag('!override', {
+		create: () => [],
+		addItem: (items, value) => {
+			items.push(value);
+		},
+		identify: () => false,
+	}),
+);
+
 function usage() {
 	console.log(`Usage: scripts/sync-compose-tags.cjs [--check] [COMPOSE_FILE ...]
 
@@ -233,7 +244,7 @@ let changed = false;
 
 for (const composeFile of composeFiles) {
 	const original = fs.readFileSync(composeFile, 'utf8');
-	const compose = yaml.load(original);
+	const compose = yaml.load(original, { schema: composeSchema });
 	const updates = serviceUpdates(composeFile, compose);
 	const next = replaceImageLines(original, updates, composeFile);
 
