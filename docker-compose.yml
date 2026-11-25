@@ -94,7 +94,7 @@ services:
     logging: *default-logging
     environment:
       - PORT=8080
-      - REDIS_URL=redis://redis:6379
+      - REDIS_URL=redis://redis:${REDIS_PORT:-6379}
       - API_ORIGINS=${API_ORIGINS}
     networks:
       - traefik
@@ -141,7 +141,7 @@ services:
     logging: *default-logging
     environment:
       - PORT=8070
-      - REDIS_URL=redis://redis:6379
+      - REDIS_URL=redis://redis:${REDIS_PORT:-6379}
       - API_ORIGINS=${API_ORIGINS}
       - TEXMF_ROOT=/texmf
     volumes:
@@ -241,12 +241,15 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=8080
-      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_URL=redis://redis:${REDIS_PORT:-6379}
       - PEERJS_SERVERS=${PEERJS_SERVERS}
       - HOST_DOMAIN=${PRODUCTION_DOMAIN}
       - API_ORIGINS=${API_ORIGINS}
     networks:
       - traefik
+    depends_on:
+      redis:
+        condition: service_started
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.filepizza.rule=Host(`filepizza.${BASE_DOMAIN}`) || Host(`filepizza.${PRODUCTION_DOMAIN:-yourdomain.com}`)"
@@ -287,6 +290,7 @@ services:
 
   redis:
     image: redis:alpine
+    command: redis-server --port ${REDIS_PORT:-6379}
     profiles: [ all, redis, filepizza, texlive, texlive2026 ]
     container_name: ${COMPOSE_PROJECT_NAME}-redis
     restart: unless-stopped
@@ -295,7 +299,7 @@ services:
       - traefik
     volumes:
       - redis_data:/data
-
+      
 networks:
   traefik:
     name: ${COMPOSE_PROJECT_NAME}-traefik
