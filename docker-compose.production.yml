@@ -1,0 +1,32 @@
+services:
+  traefik:
+    command:
+      - "--api.dashboard=false"
+      - "--api.insecure=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.websecure.http.tls.certresolver=letsencrypt"
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+      - "--providers.docker.exposedbydefault=false"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/certs/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--log.level=INFO"
+    ports: !override
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes: !override
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-certs:/certs
+
+  texlyre-frontend:
+    labels:
+      - "traefik.http.routers.frontend.rule=Host(`${FRONTEND_HOST}`) && PathPrefix(`/texlyre`)"
+      - "traefik.http.routers.frontend-secure.rule=Host(`${FRONTEND_HOST}`) && PathPrefix(`/texlyre`)"
+
+  portainer:
+    labels:
+      - "traefik.http.routers.portainer.rule=Host(`${PORTAINER_HOST}`)"
+      - "traefik.http.routers.portainer-secure.rule=Host(`${PORTAINER_HOST}`)"

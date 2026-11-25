@@ -1,11 +1,39 @@
 #!/bin/sh
 set -eu
+set -o pipefail
 
 TARGET=/texmf
 STRIP="${TEXMF_STRIP:-1}"
+COMPLETE="$TARGET/.texmf-initialized"
+PENDING="$TARGET/.texmf-initializing"
 
-if [ -d "$TARGET/tex" ]; then
+valid_tree() {
+	[ -f "$TARGET/tex/latex/base/article.cls" ] && [ -d "$TARGET/fonts" ]
+}
+
+fail() {
+	echo "fetch-texmf: $*" >&2
+	exit 1
+}
+
+if [ -n "${TEXMF_EXTERNAL:-}" ]; then
+	valid_tree || fail "$TARGET does not contain a valid texmf-dist tree; check TEXMF_ROOT"
+	echo "fetch-texmf: using existing $TARGET"
+	exit 0
+fi
+
+fingerprint=$(printf '%s\n' "${TEXMF_URL:-}" "$STRIP" | sha256sum | cut -d ' ' -f 1)
+
+if [ -f "$COMPLETE" ]; then
+	valid_tree || fail "$TARGET is incomplete; restore the volume or select a new one"
+	[ "$(cat "$COMPLETE")" = "$fingerprint" ] || fail "archive configuration changed; select a new volume or migrate the existing tree"
+	rm -f "$PENDING"
 	echo "fetch-texmf: $TARGET is already populated"
+	exit 0
+fi
+
+if [ ! -f "$PENDING" ] && valid_tree; then
+	echo "fetch-texmf: using existing $TARGET (archive version not recorded)"
 	exit 0
 fi
 
@@ -30,11 +58,13 @@ case "$TEXMF_URL" in
 	*.tar.xz | *.txz) decompress="xz -d" ;;
 	*.tar.gz | *.tgz) decompress="gzip -d" ;;
 	*.tar) decompress="cat" ;;
-	*)
-		echo "fetch-texmf: unsupported archive type for $TEXMF_URL" >&2
-		exit 1
-		;;
+	*) fail "unsupported archive type for $TEXMF_URL" ;;
 esac
+
+mkdir -p "$TARGET"
+if [ ! -f "$PENDING" ] && [ -n "$(ls -A "$TARGET")" ]; then
+	fail "$TARGET is not empty; inspect the existing tree before replacing it"
+fi
 
 apk add --no-cache curl tar xz zstd > /dev/null
 
@@ -49,14 +79,18 @@ MSG
 	exit 1
 fi
 
-echo "fetch-texmf: downloading $TEXMF_URL"
-mkdir -p "$TARGET"
-curl -fsSL "$TEXMF_URL" | $decompress | tar -x --strip-components="$STRIP" -C "$TARGET"
-
-if [ ! -d "$TARGET/tex" ]; then
-	echo "fetch-texmf: no tex/ directory after extraction, check TEXMF_URL and TEXMF_STRIP" >&2
-	rm -rf "${TARGET:?}"/*
-	exit 1
+if [ -f "$PENDING" ]; then
+	echo "fetch-texmf: recovering interrupted initialization"
+	find "$TARGET" -mindepth 1 -maxdepth 1 ! -name '.texmf-initializing' -exec rm -rf -- {} +
+else
+	: > "$PENDING"
 fi
 
+echo "fetch-texmf: downloading $TEXMF_URL"
+curl -fsSL "$TEXMF_URL" | $decompress | tar -x --strip-components="$STRIP" -C "$TARGET"
+
+valid_tree || fail "invalid texmf-dist tree after extraction; check TEXMF_URL and TEXMF_STRIP"
+printf '%s\n' "$fingerprint" > "$COMPLETE.tmp"
+mv "$COMPLETE.tmp" "$COMPLETE"
+rm -f "$PENDING"
 echo "fetch-texmf: populated $TARGET"

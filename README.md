@@ -69,8 +69,11 @@ Use `--build` to compile from the pinned submodules, or pull the published image
 
 ```bash
 docker compose pull
-docker compose up -d
+docker compose up -d --no-build
 ```
+
+For prebuilt services, no npm install or submodules are required. For public HTTPS,
+see [production deployment](ADVANCED.md#production-deployment).
 
 The npm wrappers use `--remove-orphans`, which also removes services that were disabled
 since the previous start:
@@ -89,7 +92,7 @@ npm run down
 comma-separated subset of:
 
 ```env
-SERVICES=frontend,portainer,filepizza,ywebrtc,peerjs,texlive,texlive2026,redis
+SERVICES=frontend,portainer,filepizza,ywebrtc,peerjs,texlive,texlive2026,proxy,redis
 COMPOSE_PROFILES=${SERVICES:-all}
 ```
 
@@ -100,7 +103,7 @@ server while disabling Portainer and TeX Live 2026:
 SERVICES=frontend,filepizza,ywebrtc,peerjs,texlive
 ```
 
-Traefik remains the routing core. Redis is activated automatically when `filepizza` or
+Traefik remains the routing core. Redis is activated automatically when `filepizza`, `texlive` or
 `texlive2026` is selected, and can also be selected directly.
 
 Frontend endpoint overrides are service-scoped. If a service is absent from `SERVICES`,
@@ -157,7 +160,7 @@ With `SERVICES=all`, the local stack is available through Traefik on port 8082.
 
 ### Management
 
-* **Traefik Dashboard**: http://traefik.localhost:8082
+* **Traefik Dashboard**: http://localhost:8080/dashboard/
 * **Portainer**: http://portainer.localhost:8082
 
 ### Applications
